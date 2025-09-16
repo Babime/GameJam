@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Environnement
+.venv/
+env/
+venv/
+
+# VS Code
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Autres
+*.log
+*.tmp
+.DS_Store
