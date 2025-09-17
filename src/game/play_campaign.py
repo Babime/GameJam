@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 import pygame
+from audio.bgm import play_bgm
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
@@ -77,7 +78,7 @@ def make_room_scene2(win_w, win_h, gvars):
 
 CAMPAIGN = [
     #{"id": "scene1_vault", "scene": SCENE1_VAULT, "room_factory": make_room_scene1},
-    {"id": "martha_scene", "scene": SCENE3_MARTHA, "room_factory": make_room_scene2},
+    {"id": "martha_scene", "scene": SCENE3_MARTHA, "room_factory": make_room_scene2, "bgm": "scene3.mp3", "bgm_volume": 0.65},
     # {"id": "scene3_abc", "scene": SCENE3, "room_factory": make_room_scene3},
 ]
 
@@ -103,10 +104,19 @@ def main():
         pygame.quit()
         return
     
+
     for entry in CAMPAIGN:
         scene_def = entry["scene"]
         factory   = entry["room_factory"]
+
+        # --- musique de fond (facultatif par scène) ---
+        bgm_name = entry.get("bgm")
+        if bgm_name:
+            vol = float(entry.get("bgm_volume", 0.7))
+            play_bgm(bgm_name, volume=vol)  # loop infini
+
         run_scene(screen, dialog, scene_def, factory, gvars, fps=FPS, rng_seed=RNG_SEED)
+
         # Allow early quit
         for ev in pygame.event.get(pygame.QUIT):
             pygame.quit()
