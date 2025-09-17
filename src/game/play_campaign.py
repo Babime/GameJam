@@ -4,7 +4,6 @@ from pathlib import Path
 import sys
 import pygame
 
-# QUICK-FIX for direct execution; remove if you run with: python -m game.play_campaign from /src
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from core.config import (

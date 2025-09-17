@@ -34,3 +34,7 @@ FOLLOW_THRESHOLD    = 60  # follow when trust >= 60
 
 # --- Misc ---
 RNG_SEED = 42
+
+# --- bustshot
+RIGHT_MARGIN = 40
+BUSTSHOT_SCALE = 1/2.5  # draw at 40% of the current computed size
