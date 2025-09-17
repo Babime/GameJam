@@ -1,57 +1,49 @@
-# country_house_scene.py
+# src/scenes/country_house_scene.py
 from __future__ import annotations
 from pathlib import Path
 from typing import Optional, Callable
 import pygame
-import pytmx
+from core.config import FONT_PATH
+from core.actor_sprite import create_car_animator, create_grandma_animator, create_police_animator, create_tony_animator
+
 
 # --- (optionnel) rendu TMX via pytmx ---
 try:
+    import pytmx
     from pytmx.util_pygame import load_pygame as _tmx_load_pygame
     _PYTMX_OK = True
 except Exception:
     _PYTMX_OK = False
+    pytmx = None  # type: ignore
 
-# ---------- Imports projet (robustes) ----------
-# GENERAL_ASSET_DIR
-from core.config import GENERAL_ASSET_DIR  
+# ---------- Imports projet : mêmes conventions que scène 1 ----------
+from core.config import ASSETS_DIR, GENERAL_ASSET_DIR  # ASSETS_DIR pour la carte, GENERAL_ASSET_DIR pour les sprites
+from core.actor_sprite import create_grandma_animator, create_police_animator
 
-# Constantes tailles
-PLAYER_SIZE = 32  
-SPRITE_DRAW_H = 56  
-
-
-# Animators (identiques à Tony côté API FourDirWalker)
-from core.actor_sprite import (
-    FourDirWalker,
-    create_grandma_animator,
-    create_police_animator,
-)
-
-# ----------------- Paramètres visuels -----------------
-HUD_PAD = 10
+# ----------------- Paramètres visuels / gameplay -----------------
+PLAYER_SIZE = 32          # hitbox logique (comme ta scène 1)
+SPRITE_DRAW_H = 56        # hauteur visuelle des sprites (Tony-like)
 FADE_MS = 900
-CAR_SPEED = 240              # px/s pour les déplacements "voiture"
-FOOTSTEP_SPEED = 120         # px/s pour les déplacements "à pied" (si besoin)
+CAR_SPEED = 240           # px/s
 SCENE_PAUSE_MS = 800
 
-# Points-clefs (écran) — ajuste si besoin pour ton .tmx
-# On part du principe que le .tmx est rendu plein écran.
-DRIVE_IN_START = ( -200, 520)   # hors-écran gauche
-DRIVE_IN_STOP  = (  420, 520)   # allée devant la maison
-PORCH_POS      = (  600, 460)   # porche / porte d'entrée (repère pour Martha)
-BACK_CELLAR    = (  940, 560)   # arrière maison (entrée cave)
-DRIVE_OUT_END  = ( 1400, 520)   # hors-écran droite
+# Points-clefs (écran) — ajuste si besoin selon ta carte .tmx
+DRIVE_IN_START = (-200, 520)   # hors-écran gauche
+DRIVE_IN_STOP  = ( 420, 520)   # allée devant la maison
+PORCH_POS      = ( 600, 460)   # porche (Martha)
+DRIVE_OUT_END  = (1400, 520)   # hors-écran droite
+
+# --- Chorégraphie "arrivée par le haut -> maison gauche" ---
+TOP_ENTRY          = (460, -120)   # arrive depuis le haut (x centré sur la route du haut)
+LEFT_HOUSE_PARK    = (460, 500)    # place de parking devant la maison orange (à ajuster)
+LEFT_HOUSE_DOOR    = (280, 470)    # devant la porte de la maison orange (à ajuster)
+TONY_STAND_OFFSET  = (-28, 0)      # offset pour faire apparaître Tony à gauche de la voiture
+TONY_STEP_TO_STAND = ( -8, 0)      # petit pas (esthétique) en sortant
 
 # ----------------- Outils -----------------
 def _ease_in_out(t: float) -> float:
-    # lissage simple 0..1
     import math
     return 0.5 - 0.5 * math.cos(min(max(t, 0.0), 1.0) * math.pi)
-
-def _text(surface, font, msg, pos, color=(235,235,235)):
-    surf = font.render(msg, True, color)
-    surface.blit(surf, pos)
 
 def _blit_tile(surface, img, x, y, tile_h, tileset_off):
     tox, toy = tileset_off
@@ -101,7 +93,6 @@ def _render_tmx_raw(tmx) -> pygame.Surface:
     return raw
 
 def _facing_from_vec(vx: float, vy: float) -> str:
-    # même logique que côté Tony
     if abs(vx) > abs(vy):
         return "right" if vx > 0 else "left"
     else:
@@ -112,52 +103,62 @@ def _facing_from_vec(vx: float, vy: float) -> str:
 # ======================================================
 class CountryHouseScene:
     """
-    Interface compatible avec VaultRoomScene :
-      - __init__(win_w, win_h, asset_dir_or_map, hud_font_path, game_vars)
-      - layout_for_dialogue(dialog_top: int)
-      - start_event(event_name: str, on_done: Callable[[str], None])
-      - update(dt_ms: int)
-      - draw(screen: pygame.Surface)
-      - handle_event(pygame_event)
-    Événements supportés (à appeler depuis le graphe):
-      - 'arrive_house'       : voiture entre et s'arrête devant la maison
-      - 'martha_greets'      : Martha sort, courte pause d’ambiance
-      - 'rest_living_room'   : fondu maison -> repos canapé -> fin
-      - 'rest_cellar'        : fondu maison -> repos cave -> fin
-      - 'rest_car'           : fondu léger -> repos dans la voiture -> fin
-      - 'depart'             : Tony repart avant l’arrivée d’Harold
+    Scène 2 (Maison de campagne) — même protocole que VaultRoomScene :
+      - layout_for_dialogue(dialog_top)
+      - start_event(event_name, on_done)
+      - update(dt_ms)
+      - draw(screen)
+      - handle_event(ev)
+    Aucune DialogueBox / DialogueRunner ici (gérés par le scene_runner).
     """
-    def __init__(self, win_w: int, win_h: int, map_path_or_dir: Path,
-                 hud_font_path: Optional[Path], game_vars):
+    def __init__(self, win_w: int, win_h: int, gvars):
         self.win_w, self.win_h = win_w, win_h
-        self.gvars = game_vars
+        self.gvars = gvars
 
-        # --- Police HUD
         pygame.font.init()
-        self.hud_font = pygame.font.Font(str(hud_font_path), 18) if hud_font_path else pygame.font.SysFont(None, 18)
+        self.hud_font = (
+            pygame.font.Font(str(FONT_PATH), 18)
+            if FONT_PATH and Path(FONT_PATH).exists()
+            else pygame.font.SysFont("monospace", 18)
+        )
+        self.hud_color = (230, 230, 230)
+        self.hud_pos = (12, 8)
 
-        # --- Chargement TMX (plein écran)
-        self.map_surface = self._render_tmx_fullscreen(map_path_or_dir)
+        # --- Chargement TMX (plein écran ou fallback)
+        self.map_surface = self._render_tmx_fullscreen(ASSETS_DIR / "village" / "Village.tmx")
 
-        # --- Entités (Rect collisions) : on s'aligne sur Tony -> PLAYER_SIZE
+        # --- Entités (Rect collisions) : alignées sur scène 1 -> PLAYER_SIZE
         self.car = pygame.Rect(0, 0, PLAYER_SIZE, PLAYER_SIZE)
         self.car.center = DRIVE_IN_START
 
-        self.martha = pygame.Rect(0, 0, PLAYER_SIZE, PLAYER_SIZE)  # "grand-mère" de Tony
+        self.martha = pygame.Rect(0, 0, PLAYER_SIZE, PLAYER_SIZE)
         self.martha.center = PORCH_POS
         self.martha_visible = False
 
-        # --- Sprites animés (mêmes patterns que Tony)
-        # Grand-mère (légèrement en-dessous de Tony pour cohérence visuelle)
-        self.grandma_walker: FourDirWalker = create_grandma_animator(GENERAL_ASSET_DIR, target_height=max(1, SPRITE_DRAW_H - 2))
-        self._grandma_facing_dir: str = "down"
-        self._grandma_moving: bool = False
+        # --- Sprites animés (4-dir API identique à Tony)
+        self.grandma_walker = create_grandma_animator(GENERAL_ASSET_DIR, target_height=SPRITE_DRAW_H - 2)  # un poil plus petite
+        self._grandma_facing_dir = "down"
+        self._grandma_moving = False
 
-        # Voiture de police (latéral slide ; up/down placeholders)
-        self.police_walker: FourDirWalker = create_police_animator(GENERAL_ASSET_DIR, target_height=SPRITE_DRAW_H)
-        self._police_facing_dir: str = "right"
-        self._police_moving: bool = False
-        self._police_last_center = pygame.Vector2(self.car.center)
+        # --- Animations voiture (civile et police)
+        self.car_animator = create_car_animator(GENERAL_ASSET_DIR, target_height=SPRITE_DRAW_H)
+        self.police_animator = create_police_animator(GENERAL_ASSET_DIR, target_height=SPRITE_DRAW_H)
+
+        self._car_facing_dir = "up"
+        self._car_moving = False
+
+        # Flag pour choisir quel sprite afficher
+        self._use_police_car = False
+
+
+        # --- Tony (apparition à la sortie de voiture)
+        self.tony_rect = pygame.Rect(0, 0, PLAYER_SIZE, PLAYER_SIZE)
+        self.tony_visible = False
+        self.tony_walker = create_tony_animator(GENERAL_ASSET_DIR, target_height=SPRITE_DRAW_H)
+        self._tony_facing_dir = "down"
+        self._tony_moving = False
+        self._tony_target: Optional[pygame.Vector2] = None
+        self._tony_speed = 110.0  # petit pas en sortie
 
         # --- État cinématique
         self._event_name: Optional[str] = None
@@ -178,19 +179,12 @@ class CountryHouseScene:
         self.safe_bottom = self.win_h  # zone de jeu sous la boîte de dialogue
 
     # ---------- TMX ----------
-    def _render_tmx_fullscreen(self, map_path_or_dir: Path) -> pygame.Surface:
+    def _render_tmx_fullscreen(self, tmx_path: Path) -> pygame.Surface:
         W, H = self.win_w, self.win_h
 
-        tmx_path = Path(map_path_or_dir)
-        if tmx_path.is_dir():
-            found = list(tmx_path.glob("*.tmx"))
-            if found:
-                tmx_path = found[0]
-
         if _PYTMX_OK and tmx_path.suffix.lower() == ".tmx" and tmx_path.exists():
-            import pytmx
             tmx = _tmx_load_pygame(str(tmx_path))
-            raw = _render_tmx_raw(tmx)  # ✅ rendu “fidèle Tiled”
+            raw = _render_tmx_raw(tmx)
             rw, rh = raw.get_size()
             scale = min(W / rw, H / rh)
             new = pygame.transform.smoothscale(raw, (int(rw * scale), int(rh * scale)))
@@ -211,11 +205,15 @@ class CountryHouseScene:
     def layout_for_dialogue(self, dialog_top: int):
         margin = 8
         self.safe_bottom = max(0, dialog_top - margin)
-        # on garde la voiture en bas de la zone visible
+        # garder la voiture en bas de la zone visible
         cx, _ = self.car.center
         self.car.center = (cx, min(self.safe_bottom - self.car.h // 2, DRIVE_IN_STOP[1]))
 
     def start_event(self, event_name: str, on_done: Callable[[str], None]):
+        """
+        Appelée par le scene_runner sur les noeuds wait_scene.
+        On lance la mini-cinématique, puis on appelle on_done(event_name).
+        """
         self._event_name = event_name
         self._on_done = on_done
         self._event_phase = "init"
@@ -223,14 +221,41 @@ class CountryHouseScene:
 
         if event_name == "arrive_house":
             # voiture roule jusqu'à l'allée
-            self._set_move(self.car, DRIVE_IN_START, DRIVE_IN_STOP, pixels_per_sec=CAR_SPEED)
-            # facing & anim on (mêmes patterns que Tony)
-            self._police_facing_dir = "right" if DRIVE_IN_STOP[0] > DRIVE_IN_START[0] else "left"
-            self._police_moving = True
-            self.police_walker.update(self._police_facing_dir, True, 0)
+            self._use_police_car = True
+            self._set_move(self.car, TOP_ENTRY, LEFT_HOUSE_PARK, pixels_per_sec=CAR_SPEED)
+            self._car_facing_dir = "right"
+            self._car_moving = True
+            self.police_animator.update(self._car_facing_dir, True, 0)
+        
+        elif event_name == "arrival_from_top":
+            self._use_police_car = False
+            self._set_move(self.car, TOP_ENTRY, LEFT_HOUSE_PARK, pixels_per_sec=CAR_SPEED)
+            self._car_facing_dir = "up"
+            self._car_moving = True
+            self.car_animator.update(self._car_facing_dir, True, 0)
+
+        elif event_name == "tony_exit_car":
+            # Tony apparaît à côté de la voiture (à gauche par défaut), fait un petit pas et s'arrête
+            self.tony_visible = True
+            base = pygame.Vector2(self.car.center)
+            off = pygame.Vector2(TONY_STAND_OFFSET)
+            self.tony_rect.center = (int(base.x + off.x), int(base.y + off.y))
+            # petit pas esthétique
+            step_to = (self.tony_rect.centerx + TONY_STEP_TO_STAND[0],
+                    self.tony_rect.centery + TONY_STEP_TO_STAND[1])
+            self._start_tony_step_to(step_to)
+
+        elif event_name == "martha_exit_house":
+            # Mamie sort et se place devant la porte (on la téléporte ou on joue une courte marche)
+            self.martha_visible = True
+            self.martha.center = LEFT_HOUSE_DOOR
+            self._grandma_facing_dir = "right"  # tournée vers Tony/voiture
+            self.grandma_walker.update(self._grandma_facing_dir, False, 0)
+            # petite pause pour laisser “respirer”
+            self._timer_ms = 500
 
         elif event_name == "martha_greets":
-            # Martha apparaît sur le porche, idle face caméra (down)
+            # Martha apparaît sur le porche, idle face caméra
             self.martha_visible = True
             self._grandma_facing_dir = "down"
             self._grandma_moving = False
@@ -247,21 +272,35 @@ class CountryHouseScene:
             self._begin_fade_out(int(FADE_MS * 0.6))
 
         elif event_name == "depart":
-            # Tony repart avant Harold : la voiture quitte vers la droite
-            self._set_move(self.car, self.car.center, DRIVE_OUT_END, pixels_per_sec=CAR_SPEED)
-            self._police_facing_dir = "right" if DRIVE_OUT_END[0] > self.car.centerx else "left"
-            self._police_moving = True
-            self.police_walker.update(self._police_facing_dir, True, 0)
+            self._use_police_car = True
+            self._set_move(self.car, TOP_ENTRY, LEFT_HOUSE_PARK, pixels_per_sec=CAR_SPEED)
+            self._car_facing_dir = "left"
+            self._car_moving = True
+            self.police_animator.update(self._car_facing_dir, True, 0)
+
+        # --- Événements supplémentaires du graphe (scene3_country_house) ---
+        elif event_name == "harold_arrives_chase":
+            self._use_police_car = True
+            self._set_move(self.car, TOP_ENTRY, LEFT_HOUSE_PARK, pixels_per_sec=CAR_SPEED)
+            self._car_facing_dir = "left"
+            self._car_moving = True
+            self.police_animator.update(self._car_facing_dir, True, 0)
+
+        elif event_name in ("hide_in_cellar_safe", "force_cellar_stay"):
+            self._begin_fade_out(FADE_MS)
+
+        elif event_name in ("tony_sleeps_car", "avoid_livingroom_sleep_car", "reject_cellar_sleep_car"):
+            self._begin_fade_out(int(FADE_MS * 0.6))
 
         else:
-            # événement inconnu : terminer tout de suite pour ne pas bloquer
+            # inconnu -> finir immédiatement pour ne pas bloquer le graphe
             self._finish_event()
             return
 
         self._event_phase = "run"
 
     def handle_event(self, ev):
-        # Pas d'input joueur dans cette scène (cinématique pure)
+        # cinématique pure (pas d'input)
         pass
 
     # ---------- Update ----------
@@ -272,14 +311,14 @@ class CountryHouseScene:
             self._fade_alpha = int(max(0, min(255, self._fade_alpha + step * self._fade_dir)))
             self._fade_ms -= dt_ms
             if self._fade_ms <= 0:
-                # Transition de phase (out -> "repos" -> in)
-                if self._event_name in ("rest_living_room", "rest_cellar", "rest_car"):
+                # (out -> repos -> in)
+                if self._event_name in ("rest_living_room", "rest_cellar", "rest_car",
+                                        "hide_in_cellar_safe", "force_cellar_stay",
+                                        "tony_sleeps_car", "avoid_livingroom_sleep_car", "reject_cellar_sleep_car"):
                     if self._fade_dir > 0:
-                        # fini de fondre au noir => simuler repos court, puis fondre au clair
                         self._timer_ms = 1200
                         self._fade_dir = 0
                     elif self._fade_dir < 0:
-                        # fini de revenir au clair
                         self._fade_dir = 0
                         self._finish_event()
 
@@ -289,81 +328,99 @@ class CountryHouseScene:
             if self._timer_ms <= 0:
                 if self._event_name == "martha_greets":
                     self._finish_event()
-                elif self._event_name in ("rest_living_room", "rest_cellar", "rest_car"):
-                    # après le "repos", fade-in
+                elif self._event_name in ("rest_living_room", "rest_cellar", "rest_car",
+                                          "hide_in_cellar_safe", "force_cellar_stay",
+                                          "tony_sleeps_car", "avoid_livingroom_sleep_car", "reject_cellar_sleep_car"):
                     self._begin_fade_in(FADE_MS)
 
-        # Déplacements (cinématiques voiture)
-        if self._event_name in ("arrive_house", "depart") and self._event_phase == "run":
-            # Lerp + easing
+       # Déplacements voiture (arrive/depart/chase)
+        if self._event_name in ("arrive_house", "depart", "harold_arrives_chase", "arrival_from_top") and self._event_phase == "run":
             prev = pygame.Vector2(self.car.center)
             t = 1.0 - max(self._move_dur_ms, 0) / max(self._move_total_ms, 1)
             t_eased = _ease_in_out(t)
             cur = self._from_xy.lerp(self._to_xy, t_eased)
             self.car.center = (int(cur.x), int(cur.y))
 
-            # Facing + anim (identique Tony : facing de la frame courante)
             delta = (cur - prev)
             moving = delta.length_squared() > 0.1
             if moving:
-                self._police_facing_dir = _facing_from_vec(delta.x, delta.y)
-            self._police_moving = moving
-            self.police_walker.update(self._police_facing_dir, self._police_moving, dt_ms)
+                self._car_facing_dir = _facing_from_vec(delta.x, delta.y)
+            self._car_moving = moving
+
+            # Choisir l'animator selon le flag
+            animator = self.police_animator if self._use_police_car else self.car_animator
+            animator.update(self._car_facing_dir, self._car_moving, dt_ms)
 
             self._move_dur_ms -= dt_ms
             if self._move_dur_ms <= 0:
-                # clamp fin
                 self.car.center = (int(self._to_xy.x), int(self._to_xy.y))
-                # stop anim
-                self._police_moving = False
-                self.police_walker.update(self._police_facing_dir, False, dt_ms)
+                self._car_moving = False
+                animator.update(self._car_facing_dir, False, dt_ms)
                 self._finish_event()
 
-        # Sécurité : si la boîte de dialogue remonte, on évite le chevauchement visuel
+        if self._car_moving:
+            self.car_animator.update(self._car_facing_dir, True, dt_ms)
+        else:
+            self.car_animator.update(self._car_facing_dir, False, dt_ms)
+
+        if self._tony_target is not None:
+            if self._update_tony_step(dt_ms):
+                self._finish_event()
+        else:
+            if self.tony_visible:
+                self.tony_walker.update(self._tony_facing_dir, False, dt_ms)
+
+        # Sécurité : si la boîte de dialogue remonte, éviter chevauchement
         if self.car.bottom > self.safe_bottom:
             self.car.bottom = self.safe_bottom
 
-        # Grand-mère : dans cette scène, elle reste idle (si visible)
+        # Martha idle anim si visible
         if self.martha_visible:
             self.grandma_walker.update(self._grandma_facing_dir, False, dt_ms)
 
     # ---------- Draw ----------
     def draw(self, screen: pygame.Surface):
-        # fond (tmx rendu en “plein écran”)
+        # fond (tmx)
         screen.blit(self.map_surface, (0, 0))
 
-        # --- Rendu SPRITES (même ancrage top-left que Tony) ---
-        # Voiture de police
-        pol_frame = self.police_walker.current_frame()
-        screen.blit(pol_frame, (self.car.x, self.car.y))
+        # sprites
+        if self._use_police_car:
+            car_frame = self.police_animator.current_frame()
+        else:
+            car_frame = self.car_animator.current_frame()
+        screen.blit(car_frame, self.car.topleft)
 
-        # Martha (grand-mère)
         if self.martha_visible:
             gm_frame = self.grandma_walker.current_frame()
             screen.blit(gm_frame, (self.martha.x, self.martha.y))
 
-        # HUD (trust, police_gap, fatigue si dispo)
+        # Tony (si visible)
+        if self.tony_visible:
+            tony_frame = self.tony_walker.current_frame()
+            screen.blit(tony_frame, (self.tony_rect.x, self.tony_rect.y))
+
+
+        # --- HUD Trust / PoliceGap (comme scène 1)
         trust = getattr(self.gvars, "trust", "?")
         pgap  = getattr(self.gvars, "police_gap", "?")
-        fatigue = getattr(self.gvars, "fatigue", None)
-        hud_msg = f"Trust: {trust}   PoliceGap: {pgap}"
-        if fatigue is not None:
-            hud_msg += f"   Fatigue: {fatigue}"
-        _text(screen, self.hud_font, hud_msg, (HUD_PAD, HUD_PAD))
-
+        hud_txt = f"Trust: {trust}   PoliceGap: {pgap}"
+        hud_surf = self.hud_font.render(hud_txt, True, self.hud_color)
+        screen.blit(hud_surf, self.hud_pos)
+        
         # Fades
-        if self._fade_dir != 0 or (self._event_name in ("rest_living_room", "rest_cellar", "rest_car") and self._timer_ms > 0):
+        if self._fade_dir != 0 or (self._event_name in ("rest_living_room", "rest_cellar", "rest_car",
+                                                        "hide_in_cellar_safe", "force_cellar_stay",
+                                                        "tony_sleeps_car", "avoid_livingroom_sleep_car", "reject_cellar_sleep_car")
+                                   and self._timer_ms > 0):
             overlay = pygame.Surface((self.win_w, self.win_h), pygame.SRCALPHA)
-            # teinte différente selon lieu de repos (très léger)
+            # teintes légères selon le lieu de repos (optionnel)
             tint = (0, 0, 0)
-            if self._event_name == "rest_cellar":
+            if self._event_name in ("rest_cellar", "hide_in_cellar_safe", "force_cellar_stay"):
                 tint = (5, 5, 12)
             elif self._event_name == "rest_living_room":
                 tint = (12, 8, 4)
-            elif self._event_name == "rest_car":
-                tint = (0, 0, 0)
-            alpha = self._fade_alpha if self._fade_dir != 0 else 200  # pendant “repos”
-            overlay.fill((*tint, max(0, min(255, int(alpha)))) )
+            alpha = self._fade_alpha if self._fade_dir != 0 else 200
+            overlay.fill((*tint, max(0, min(255, int(alpha)))))
             screen.blit(overlay, (0, 0))
 
     # ---------- Helpers cinématiques ----------
@@ -398,3 +455,30 @@ class CountryHouseScene:
             cb = self._on_done
             self._on_done = None
             cb(name)
+
+    def _start_tony_step_to(self, target_xy: tuple[int, int]):
+        self._tony_target = pygame.Vector2(target_xy)
+        self._tony_moving = True
+        dx = self._tony_target.x - self.tony_rect.centerx
+        dy = self._tony_target.y - self.tony_rect.centery
+        self._tony_facing_dir = "right" if dx > 0 else "left" if abs(dx) > abs(dy) else ("down" if dy > 0 else "up")
+        self.tony_walker.update(self._tony_facing_dir, True, 0)
+
+    def _update_tony_step(self, dt_ms: int) -> bool:
+        if self._tony_target is None:
+            return False
+        pos = pygame.Vector2(self.tony_rect.center)
+        to_go = self._tony_target - pos
+        step = max(1e-6, self._tony_speed * (dt_ms / 1000.0))
+        if to_go.length() <= step:
+            self.tony_rect.center = (int(self._tony_target.x), int(self._tony_target.y))
+            self._tony_target = None
+            self._tony_moving = False
+            self.tony_walker.update(self._tony_facing_dir, False, 0)
+            return True
+        move = to_go.normalize() * step
+        self.tony_rect.centerx += int(round(move.x))
+        self.tony_rect.centery += int(round(move.y))
+        self._tony_facing_dir = "right" if move.x > 0 else "left" if abs(move.x) > abs(move.y) else ("down" if move.y > 0 else "up")
+        self.tony_walker.update(self._tony_facing_dir, True, dt_ms)
+        return False

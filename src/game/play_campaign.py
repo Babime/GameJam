@@ -20,6 +20,7 @@ from core.scene_runner import run_scene
 # --- import your scene content & room(s) ---
 from scenes.scene1_vault import SCENE1_VAULT
 from scenes.vault_room import VaultRoomScene
+from scenes.scene3_country_house import SCENE3_MARTHA
 from scenes.country_house_scene import CountryHouseScene
 
 def _run_country_house_debug(screen, gvars):
@@ -78,19 +79,11 @@ def make_room_scene1(win_w, win_h, gvars):
 
 
 def make_room_scene2(win_w, win_h, gvars):
-    # ton fichier .tmx est rangé dans assets/general/village/Village.tmx
-    MAP_PATH = ASSETS_DIR / "village" / "Village.tmx"
-    return CountryHouseScene(
-        win_w=win_w,
-        win_h=win_h,
-        map_path_or_dir=MAP_PATH,   # accepte aussi un dossier contenant un .tmx
-        hud_font_path=FONT_PATH,
-        game_vars=gvars
-    )
+    return CountryHouseScene(win_w, win_h, gvars)
 
 CAMPAIGN = [
     {"id": "scene1_vault", "scene": SCENE1_VAULT, "room_factory": make_room_scene1},
-    # {"id": "scene2_xyz", "scene": SCENE2, "room_factory": make_room_scene2},
+    {"id": "martha_scene", "scene": SCENE3_MARTHA, "room_factory": make_room_scene2},
     # {"id": "scene3_abc", "scene": SCENE3, "room_factory": make_room_scene3},
 ]
 

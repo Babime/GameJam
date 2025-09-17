@@ -25,7 +25,9 @@ class DialogueRunner:
       - line: {type,speaker,text,next}
       - choice: {type,prompt,options:[{id,label,lines?,correct?}],choice_speaker?,next}
       - branch_choice_correct: {type, if_correct, if_wrong}
-      - decision_follow: {type, if_follow_and_correct, if_follow_and_wrong, if_ignore_and_correct, if_ignore_and_wrong}
+      - branch_choice_3way: {type, if_correct, if_wrong, if_neutral}
+      - decision_follow: {type, if_follow_and_correct, if_follow_and_wrong}
+      - decision_follow_3way: {type, if_follow_and_correct, if_follow_and_wrong, if_ignore_and_correct, if_ignore_and_wrong}
       - effects: {type,effects,next}
       - goto: {type,next}
       - wait_scene: {type,event,next}
@@ -177,6 +179,36 @@ class DialogueRunner:
             elif ntype == "end":
                 self.finished = True
                 break
+
+            elif ntype == "branch_choice_3way":
+                # self.selected["correct"] peut être True / False / "neutral"
+                tag = (self.selected or {}).get("correct", False)
+                if tag is True:
+                    self.current_id = node["if_correct"]
+                elif tag == "neutral":
+                    self.current_id = node["if_neutral"]
+                else:
+                    self.current_id = node["if_wrong"]
+
+            elif ntype == "decision_follow_3way":
+                # follow/ignore selon la confiance, puis branche 3 voies
+                tag = (self.selected or {}).get("correct", False)  # True / False / "neutral"
+                follows = self._tony_follows(self.gvars.trust)
+
+                if follows:
+                    if tag is True:
+                        self.current_id = node["if_follow_correct"]
+                    elif tag == "neutral":
+                        self.current_id = node["if_follow_neutral"]
+                    else:
+                        self.current_id = node["if_follow_wrong"]
+                else:
+                    if tag is True:
+                        self.current_id = node["if_ignore_correct"]
+                    elif tag == "neutral":
+                        self.current_id = node["if_ignore_neutral"]
+                    else:
+                        self.current_id = node["if_ignore_wrong"]
 
             else:
                 raise ValueError(f"Unsupported node type: {ntype}")

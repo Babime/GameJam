@@ -8,21 +8,51 @@ from core.config import GENERAL_ASSET_DIR, RIGHT_MARGIN, BUSTSHOT_SCALE
 
 def draw_inline_choices(screen: pygame.Surface, dialog: DialogueBox, options, selected_index: int):
     font = dialog.font
-    parts = []
-    for i, label in enumerate(options):
-        prefix = "> "
-        color = (255, 255, 255) if i == selected_index else (190, 190, 190)
-        parts.append(font.render(prefix + label, True, color))
 
-    gap = 36
-    total_w = sum(s.get_width() for s in parts) + gap * (len(parts) - 1)
-    x = dialog.box_rect.centerx - total_w // 2
-    # use dialog’s own padding_bottom so this draws correctly for all scenes
-    y = dialog.box_rect.bottom - dialog.padding_bottom - font.get_height()
+    # Zone utile "intérieure" à la box
+    inner_left  = dialog.box_rect.left + dialog.padding_left
+    inner_right = dialog.box_rect.right - dialog.padding_right
+    inner_w     = max(1, inner_right - inner_left)
 
-    for surf in parts:
+    # Helpers ---------------------------------------------------------
+    def _truncate_to_fit(text: str) -> str:
+        """Raccourcit avec ‘…’ si la ligne dépasse inner_w."""
+        if font.size(text)[0] <= inner_w:
+            return text
+        ell = "…"
+        # on garde le plus possible de caractères avant d'ajouter …
+        lo, hi = 0, len(text)
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if font.size(text[:mid] + ell)[0] <= inner_w:
+                lo = mid + 1
+            else:
+                hi = mid
+        return (text[:max(0, lo - 1)] + ell) if lo > 0 else ell
+
+    # Prépare chaque surface (avec le ‘> ’ pour l’option sélectionnée)
+    rendered = []
+    for i, raw_label in enumerate(options):
+        label = _truncate_to_fit(raw_label)
+        prefix = "> " if i == selected_index else "  "
+        color  = (255, 255, 255) if i == selected_index else (190, 190, 190)
+        surf   = font.render(prefix + label, True, color)
+        rendered.append(surf)
+
+    # Placement : on empile en LIGNES au bas de la boîte, en revenant à la ligne si besoin
+    gap_x = 20
+    line_h = font.get_height()
+    x = inner_left
+    y = dialog.box_rect.bottom - dialog.padding_bottom - line_h
+
+    for surf in rendered:
+        w, h = surf.get_size()
+        if x + w > inner_right:
+            # retour à la ligne
+            y -= (line_h + 6)
+            x = inner_left
         screen.blit(surf, (x, y))
-        x += surf.get_width() + gap
+        x += w + gap_x
 
 def run_scene(
     screen: pygame.Surface,
@@ -93,13 +123,18 @@ def run_scene(
     # ---------------------------------------------------------
 
     def on_scene_event_done(evt_name: str):
+        nonlocal started_evt
+        started_evt = None
         runner.notify_event_done(evt_name)
         refresh_prompt()
 
     def maybe_start_scene_event():
+        nonlocal started_evt
         if runner.is_waiting_for_event():
             evt = runner.waiting_event_name()
-            room.start_event(evt, on_done=on_scene_event_done)
+            if evt and evt != started_evt:
+                started_evt = evt
+                room.start_event(evt, on_done=on_scene_event_done)
 
     show_room = False
     current = runner.get_prompt()
@@ -107,13 +142,14 @@ def run_scene(
         dialog.set_text(f'{current["speaker"]}: {current["text"]}')
 
     choice_index = 0
+    started_evt: str | None = None  
 
     def refresh_prompt():
         nonlocal current, show_room, choice_index
         current = runner.get_prompt()
         if current and current["type"] == "lines":
             # same reveal rule you used: show the room once Lukas starts talking
-            if not show_room and current.get("speaker") == "Lukas":
+            if not show_room and current.get("speaker") in ("Martha", "Tony"):
                 show_room = True
             dialog.set_text(f'{current["speaker"]}: {current["text"]}')
         elif current and current["type"] == "choice":
@@ -152,6 +188,10 @@ def run_scene(
                         runner.submit_choice(choice_index)
                         choice_index = 0
                         refresh_prompt()
+        # Si on attend un event, on affiche forcément la room (sinon on verrait un écran noir)
+        if runner.is_waiting_for_event():
+            show_room = True
+            maybe_start_scene_event()  # au cas où on est entré dans wait_scene sans refresh_prompt
 
         room.update(dt_ms)
 

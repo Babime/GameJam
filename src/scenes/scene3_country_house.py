@@ -22,8 +22,22 @@ SCENE3_MARTHA = {
         "house_arrival": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": ("Tony s’arrête devant une maison isolée. "
-                     "Moteur coupé. Des bruits de pas précipités résonnent à l’intérieur."),
+            "text": "Tony s’arrête devant une maison isolée. Moteur coupé...",
+            "next": "cinematic_arrival_top"
+        },
+        "cinematic_arrival_top": {
+            "type": "wait_scene",
+            "event": "arrival_from_top",
+            "next": "tony_gets_out"
+        },
+        "tony_gets_out": {
+            "type": "wait_scene",
+            "event": "tony_exit_car",
+            "next": "martha_comes_out"
+        },
+        "martha_comes_out": {
+            "type": "wait_scene",
+            "event": "martha_exit_house",
             "next": "martha_meets"
         },
         "martha_meets": {
@@ -51,7 +65,7 @@ SCENE3_MARTHA = {
             "prompt": "Que proposez-vous à Tony ?",
             "options": [
                 { "id": "living_room", "label": "Entrez, reposez-vous dans le salon", "correct": False }, # considerating wrong
-                { "id": "cellar", "label": "Il y a une cabane plus loin, personne ne vous y trouvera", "correct": True }, # considerating correct
+                { "id": "cellar", "label": "Je n'ai qu'une cabane à proposer", "correct": True }, # considerating correct
                 { "id": "leave", "label": "Désolée, vous ne pouvez pas rester ici", "correct": "neutral" } # considerating neutral
             ],
             "next": "branch_martha_lines"
