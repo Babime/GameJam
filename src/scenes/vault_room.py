@@ -1,15 +1,19 @@
+# src/scenes/vault_room.py
 from __future__ import annotations
 from pathlib import Path
 import math
 import random
 import pygame
 from typing import Optional, Callable
+from core.config import GENERAL_ASSET_DIR
+from core.actor_sprite import create_tony_animator
 
 # ----------------- Room Config -----------------
 WALL_H = 128
 FLOOR_TILE_TARGET = 160
-PLAYER_SIZE = 32
-PLAYER_SPEED = 240  # cinematic speed
+PLAYER_SIZE = 32           # collision box (kept as before)
+PLAYER_SPEED = 240         # cinematic speed
+SPRITE_DRAW_H = 56         # visual sprite height (scaled uniformly)
 BUTTON_TARGET_H = 40
 BUTTON_OFFSET_Y = 20
 BUTTON_SPACING_X = 110
@@ -127,7 +131,7 @@ class VaultRoomScene:
         self.door_rect.centery = WALL_H // 2
 
         # Buttons
-        self.red_btn_up   = _scale_to_height(self.red_btn_up_raw, BUTTON_TARGET_H)
+        self.red_btn_up   = _scale_to_height(self.red_btn_down_raw, BUTTON_TARGET_H)     # down/up scale same size
         self.red_btn_down = _scale_to_height(self.red_btn_down_raw, BUTTON_TARGET_H)
         self.green_btn_up   = _scale_to_height(self.green_btn_up_raw, BUTTON_TARGET_H)
         self.green_btn_down = _scale_to_height(self.green_btn_down_raw, BUTTON_TARGET_H)
@@ -146,11 +150,15 @@ class VaultRoomScene:
         self.medkit_rect = self.medkit_img.get_rect()
         self.medkit_visible = True
 
-        # Player (Tony)
+        # Player (Tony) – collision box only; sprite is drawn on top
         self.player = pygame.Rect(0, 0, PLAYER_SIZE, PLAYER_SIZE)
-        self.player_color = (40, 200, 80)
-        self.facing_angle = -90.0
         self.safe_bottom = self.win_h - 8
+
+        # Sprite animator (4-dir), initially facing up
+        self.walker = create_tony_animator(GENERAL_ASSET_DIR, target_height=SPRITE_DRAW_H)
+        self._facing_dir = "up"   # 'up','down','left','right'
+        self.facing_angle = -90.0 # for lighting cone
+        self._moving = False
 
         # State flags
         self.door_open = False
@@ -252,25 +260,33 @@ class VaultRoomScene:
         return  # AI-only
 
     def update(self, dt_ms: int):
+        # default: assume not moving this tick
+        self._moving = False
+
         if not self._event_name:
+            # idle update (no cinematics currently active)
+            self.walker.update(self._facing_dir, self._moving, dt_ms)
             return
 
         if self._event_name == "wander_then_medkit":
             if self._event_phase == "wander":
                 self._update_wander(dt_ms)
+                self.walker.update(self._facing_dir, self._moving, dt_ms)
                 return
             elif self._event_phase == "move_to_medkit":
                 self._update_move_to_target(dt_ms, pygame.Vector2(self.medkit_rect.center))
                 if self.medkit_visible and self.player.colliderect(self.medkit_rect):
                     self.medkit_visible = False
-                    self.facing_angle = -90.0
+                    self._set_facing("up")
                     self._finish_event_immediately()
+                self.walker.update(self._facing_dir, self._moving, dt_ms)
                 return
 
         if self._event_phase == "wait":
             self._wait_timer_ms -= dt_ms
             if self._wait_timer_ms <= 0:
                 self._finish_event_immediately()
+            self.walker.update(self._facing_dir, False, dt_ms)
             return
 
         if self._event_phase == "move":
@@ -279,20 +295,19 @@ class VaultRoomScene:
             if self._event_name == "go_to_medkit":
                 if self.medkit_visible and self.player.colliderect(self.medkit_rect):
                     self.medkit_visible = False
-                    self.facing_angle = -90.0
+                    self._set_facing("up")
                     self._finish_event_immediately()
 
             elif self._event_name == "go_to_door":
                 if self._distance_to(self._event_target) < 2.0:
-                    self.facing_angle = -90.0
+                    self._set_facing("up")
                     self._finish_event_immediately()
 
             elif self._event_name == "press_red_wait":
                 if self.player.colliderect(self.red_collide) or self._distance_to(self._event_target) < 2.0:
                     self.red_pressed = True
                     self.red_btn_img = self.red_btn_down
-                    self.facing_angle = -90.0
-                    # start 1s pause
+                    self._set_facing("up")
                     self._event_phase = "wait"
                     self._wait_timer_ms = 1000
 
@@ -301,35 +316,55 @@ class VaultRoomScene:
                     self.green_pressed = True
                     self.green_btn_img = self.green_btn_down
                     self.door_open = True
-                    self.facing_angle = -90.0
+                    self._set_facing("up")
                     self._finish_event_immediately()
+
+        self.walker.update(self._facing_dir, self._moving, dt_ms)
 
     # ---- movement helpers ----
     def _distance_to(self, vec: pygame.Vector2) -> float:
         pos = pygame.Vector2(self.player.centerx, self.player.centery)
         return (vec - pos).length()
 
+    def _set_facing(self, dir4: str):
+        self._facing_dir = dir4
+        # keep lighting consistent with the old angle convention
+        if dir4 == "right":
+            self.facing_angle = 0.0
+        elif dir4 == "down":
+            self.facing_angle = 90.0
+        elif dir4 == "left":
+            self.facing_angle = 180.0
+        else:  # "up"
+            self.facing_angle = -90.0
+
     def _update_move_to_target(self, dt_ms: int, target: pygame.Vector2):
-        pos = pygame.Vector2(self.player.centerx, self.player.centery)
-        to = target - pos
-        dist = to.length()
+        """
+        Move using 4-directional steps ONLY (no diagonals):
+         - Prioritize horizontal movement until aligned, then vertical.
+        """
+        pos_x, pos_y = self.player.centerx, self.player.centery
+        dx = target.x - pos_x
+        dy = target.y - pos_y
         step = PLAYER_SPEED * (dt_ms / 1000.0)
 
-        if dist <= step or dist == 0:
-            self.player.centerx = int(target.x)
-            self.player.centery = int(target.y)
-        else:
-            direction = to.normalize()
-            pos += direction * step
-            self.player.centerx = int(pos.x)
-            self.player.centery = int(pos.y)
-            if abs(direction.x) > abs(direction.y):
-                self.facing_angle = 0.0 if direction.x > 0 else 180.0
-            else:
-                self.facing_angle = 90.0 if direction.y > 0 else -90.0
+        # prefer horizontal until aligned
+        if abs(dx) > 1:
+            move = max(-step, min(step, dx))
+            pos_x += move
+            self._moving = True
+            self._set_facing("right" if move > 0 else "left")
+        elif abs(dy) > 1:
+            move = max(-step, min(step, dy))
+            pos_y += move
+            self._moving = True
+            self._set_facing("down" if move > 0 else "up")
+
+        self.player.centerx = int(round(pos_x))
+        self.player.centery = int(round(pos_y))
 
     def _update_wander(self, dt_ms: int):
-        # Keep Tony near the bottom area, moving left/right aimlessly
+        # Keep Tony near the bottom area, moving left/right aimlessly (4-dir already)
         speed = PLAYER_SPEED * self._wander_speed_scale
         dx = speed * (dt_ms / 1000.0) * self._wander_dir
         new_x = self.player.centerx + dx
@@ -344,9 +379,11 @@ class VaultRoomScene:
             new_x = right_bound
             self._wander_dir = -1
 
-        self.player.centerx = int(new_x)
+        self.player.centerx = int(round(new_x))
         self.player.centery = self.safe_bottom - self.player.height // 2
-        self.facing_angle = 0.0 if self._wander_dir > 0 else 180.0
+
+        self._moving = True
+        self._set_facing("right" if self._wander_dir > 0 else "left")
 
         self._wander_timer_ms -= dt_ms
         if self._wander_timer_ms <= 0:
@@ -377,8 +414,10 @@ class VaultRoomScene:
         if self.medkit_visible:
             screen.blit(self.medkit_img, self.medkit_rect.topleft)
 
-        # Player (Tony)
-        pygame.draw.rect(screen, self.player_color, self.player)
+        # Player (Tony) – draw sprite centered on the player's collision box bottom
+        frame = self.walker.current_frame()
+        img_rect = frame.get_rect(midbottom=self.player.midbottom)
+        screen.blit(frame, img_rect.topleft)
 
         # HUD
         hud = self.hud_font.render(
