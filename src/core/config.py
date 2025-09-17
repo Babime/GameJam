@@ -1,0 +1,36 @@
+# src/core/config.py
+from pathlib import Path
+
+# --- Display ---
+WIDTH  = 1366
+HEIGHT = 768
+FPS    = 60
+TILE   = 16
+
+# --- Assets ---
+PROJECT_ROOT       = Path(__file__).resolve().parents[2]  # <-- go up to repo root
+ASSETS_DIR         = PROJECT_ROOT / "assets"
+FONTS_DIR          = ASSETS_DIR / "fonts"
+GENERAL_ASSET_DIR  = ASSETS_DIR / "general"
+BANK_ASSET_DIR     = ASSETS_DIR / "bank"
+
+# --- UI ---
+FONT_PATH          = FONTS_DIR / "PressStart2P-Regular.ttf"
+CORNER_IMG_PATH    = GENERAL_ASSET_DIR / "bottom_left_corner.png"
+EDGE_IMG_PATH      = GENERAL_ASSET_DIR / "edge.png"
+
+FONT_SIZE          = 32
+LINE_HEIGHT_FACTOR = 1.6
+PADDING_LEFT       = 20
+PADDING_RIGHT      = 40
+PADDING_TOP        = 20
+PADDING_BOTTOM     = 20
+BOX_FILL_COLOR     = (34, 34, 34)
+
+# --- Gameplay defaults ---
+INITIAL_TRUST       = 60
+INITIAL_POLICE_GAP  = 0
+FOLLOW_THRESHOLD    = 60  # follow when trust >= 60
+
+# --- Misc ---
+RNG_SEED = 42

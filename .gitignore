@@ -21,3 +21,4 @@ venv/
 *.log
 *.tmp
 .DS_Store
+tools/
