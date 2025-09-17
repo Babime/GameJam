@@ -22,6 +22,110 @@ from scenes.scene1_vault import SCENE1_VAULT
 from scenes.vault_room import VaultRoomScene
 from scenes.country_house_scene import CountryHouseScene
 
+
+def show_start_screen(screen, WIDTH, HEIGHT):
+    pygame.init()
+    clock = pygame.time.Clock()
+
+    font = pygame.font.Font(FONT_PATH, 48)
+    small_font = pygame.font.Font(FONT_PATH, 28)
+    tiny_font = pygame.font.Font(FONT_PATH, 20)
+
+    # === IMAGES ===
+    bg_img = pygame.image.load("./assets/general/bg_city_start.png").convert()
+    bg_img = pygame.transform.scale(bg_img, (WIDTH, HEIGHT))
+
+    plane_img = pygame.image.load("./assets/general/plane.png").convert_alpha()
+    plane_img = pygame.transform.scale(
+        plane_img, (plane_img.get_width() // 6, plane_img.get_height() // 6)
+    )
+    plane_rect = plane_img.get_rect(midright=(WIDTH + 50, 50))
+
+    tony_img1 = pygame.image.load("./assets/general/walk_to_his_right_1.png").convert_alpha()
+    tony_img2 = pygame.image.load("./assets/general/walk_to_his_right_2.png").convert_alpha()
+    tony_frames = [tony_img1, tony_img2]
+    tony_frame_index = 0
+    tony_anim_timer = 0
+    tony_rect = tony_img1.get_rect(midbottom=(0, HEIGHT - 20))
+
+    plane_speed = 3
+    tony_speed = 8  
+
+    while True:
+        # === FOND BLEU NUIT ===
+        screen.fill((10, 15, 35))  
+        screen.blit(bg_img, (0, 0))
+
+        # === ANIMATIONS ===
+        plane_rect.x -= plane_speed
+        if plane_rect.right < 0:
+            plane_rect.left = WIDTH + 100
+
+        tony_rect.x += tony_speed
+        if tony_rect.left > WIDTH:
+            tony_rect.right = 0
+
+        tony_anim_timer += 1
+        if tony_anim_timer >= 10:
+            tony_anim_timer = 0
+            tony_frame_index = (tony_frame_index + 1) % len(tony_frames)
+        current_tony = tony_frames[tony_frame_index]
+
+        # === TEXTES ===
+        title = font.render("SHADOW TONY", True, (255, 255, 255))
+        subtitle = small_font.render("Can he get out ?", True, (200, 200, 200))
+        group_text = tiny_font.render("GROUPE 16", True, (120, 120, 255))
+        quit_text = tiny_font.render("Appuie sur Q pour quitter", True, (200, 180, 180))
+
+        # === POSITIONNEMENTS ===
+        title_y = HEIGHT // 2 - 200
+        subtitle_y = HEIGHT // 2 - 120
+
+        # Bouton entre le sous-titre et "quit"
+        spacing = 60
+        btn_w, btn_h = 340, 70
+        btn_x = (WIDTH - btn_w) // 2
+        btn_y = subtitle_y + spacing
+        start_rect = pygame.Rect(btn_x, btn_y, btn_w, btn_h)
+
+        quit_y = btn_y + btn_h + 50  # un peu plus haut que dans ta version
+
+        # === BOUTON START ===
+        pygame.draw.rect(screen, (60, 180, 80), start_rect, border_radius=12)
+        btn_text = small_font.render("START GAME", True, (0, 0, 0))
+        text_rect = btn_text.get_rect(center=start_rect.center)
+
+        # === DESSINS ===
+        screen.blit(plane_img, plane_rect)
+        screen.blit(current_tony, tony_rect)
+
+        screen.blit(title, ((WIDTH - title.get_width()) // 2, title_y))
+        screen.blit(subtitle, ((WIDTH - subtitle.get_width()) // 2, subtitle_y))
+        screen.blit(btn_text, text_rect)
+        screen.blit(group_text, (10, 10))
+
+        quit_rect = quit_text.get_rect(center=(WIDTH // 2, quit_y))
+        screen.blit(quit_text, quit_rect)
+
+        pygame.display.flip()
+        clock.tick(60)
+
+        # === EVENTS ===
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_RETURN, pygame.K_SPACE):
+                    return
+                elif event.key == pygame.K_q:
+                    pygame.quit()
+                    sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if start_rect.collidepoint(event.pos):
+                    return
+
+
 def _run_country_house_debug(screen, gvars):
     import pygame
     from pathlib import Path
@@ -97,7 +201,10 @@ CAMPAIGN = [
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Tony – Campaign")
+    pygame.display.set_caption("SHADOW TONY")
+
+    #show_start_screen(screen)
+    show_start_screen(screen, WIDTH, HEIGHT)
 
     dialog = DialogueBox(
         screen_w=WIDTH, screen_h=HEIGHT,
