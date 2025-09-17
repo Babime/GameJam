@@ -25,26 +25,19 @@ from scenes.country_house_scene import CountryHouseScene
 
 def _run_country_house_debug(screen, gvars):
     import pygame
-    from pathlib import Path
     from scenes.country_house_scene import CountryHouseScene
-    from core.config import ASSETS_DIR, FONT_PATH, FPS, WIDTH, HEIGHT
+    from core.config import FPS
 
-    # .tmx déjà cohérent avec make_room_scene2
-    MAP_PATH = ASSETS_DIR / "village" / "Village.tmx"
+    scene = CountryHouseScene(win_w=screen.get_width(), win_h=screen.get_height(), gvars=gvars)
 
-    scene = CountryHouseScene(
-        win_w=WIDTH,
-        win_h=HEIGHT,
-        map_path_or_dir=MAP_PATH,
-        hud_font_path=FONT_PATH,
-        game_vars=gvars
-    )
+    def _after_arrival(_):
+        scene.start_event("tony_exit_car", on_done=lambda __:
+            scene.start_event("martha_exit_house", on_done=lambda ___:
+                scene.start_event("martha_greets", on_done=lambda ____: None)
+            )
+        )
 
-    # petite chaîne d’événements pour voir l’anim
-    def _chain(_):
-        scene.start_event("martha_greets", on_done=lambda __: None)
-
-    scene.start_event("arrive_house", on_done=_chain)
+    scene.start_event("arrival_from_top", on_done=_after_arrival)
 
     clock = pygame.time.Clock()
     running = True
@@ -53,21 +46,22 @@ def _run_country_house_debug(screen, gvars):
             if ev.type == pygame.QUIT:
                 running = False
             elif ev.type == pygame.KEYDOWN:
-                # raccourcis debug utiles
                 if ev.key == pygame.K_a:
-                    scene.start_event("arrive_house", on_done=_chain)
+                    scene.start_event("arrival_from_top", on_done=_after_arrival)
                 elif ev.key == pygame.K_m:
-                    scene.start_event("martha_greets", on_done=lambda __: None)
+                    # If you want to just pop her out correctly:
+                    scene.start_event("martha_exit_house", on_done=lambda __:
+                        scene.start_event("martha_greets", on_done=lambda ___: None)
+                    )
                 elif ev.key == pygame.K_r:
                     scene.start_event("rest_living_room", on_done=lambda __: None)
                 elif ev.key == pygame.K_d:
-                    scene.start_event("depart", on_done=lambda __: None)
+                    scene.start_event("harold_arrives_chase", on_done=lambda __: None)
 
         dt = clock.tick(FPS)
         scene.update(dt)
         scene.draw(screen)
         pygame.display.flip()
-
 
 def make_room_scene1(win_w, win_h, gvars):
     return VaultRoomScene(
@@ -82,7 +76,7 @@ def make_room_scene2(win_w, win_h, gvars):
     return CountryHouseScene(win_w, win_h, gvars)
 
 CAMPAIGN = [
-    {"id": "scene1_vault", "scene": SCENE1_VAULT, "room_factory": make_room_scene1},
+    #{"id": "scene1_vault", "scene": SCENE1_VAULT, "room_factory": make_room_scene1},
     {"id": "martha_scene", "scene": SCENE3_MARTHA, "room_factory": make_room_scene2},
     # {"id": "scene3_abc", "scene": SCENE3, "room_factory": make_room_scene3},
 ]

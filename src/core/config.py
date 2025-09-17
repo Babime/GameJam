@@ -28,7 +28,7 @@ PADDING_BOTTOM     = 20
 BOX_FILL_COLOR     = (34, 34, 34)
 
 # --- Gameplay defaults ---
-INITIAL_TRUST       = 60
+INITIAL_TRUST       = 62
 INITIAL_POLICE_GAP  = 0
 FOLLOW_THRESHOLD    = 60  # follow when trust >= 60
 

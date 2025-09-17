@@ -181,12 +181,6 @@ class VaultRoomScene:
         # Wait state (e.g., after red press)
         self._wait_timer_ms: int = 0
 
-        # HUD font
-        if hud_font_path and Path(hud_font_path).exists():
-            self.hud_font = pygame.font.Font(str(hud_font_path), 22)
-        else:
-            self.hud_font = pygame.font.SysFont("monospace", 18)
-
         self._place_default_layout()
 
     # ---------- Layout ----------
@@ -418,13 +412,6 @@ class VaultRoomScene:
         frame = self.walker.current_frame()
         img_rect = frame.get_rect(midbottom=self.player.midbottom)
         screen.blit(frame, img_rect.topleft)
-
-        # HUD
-        hud = self.hud_font.render(
-            f"Trust: {self.gvars.trust}   PoliceGap: {self.gvars.police_gap}",
-            True, (230, 230, 230)
-        )
-        screen.blit(hud, (12, 8))
 
         # Separator
         pygame.draw.line(screen, (0, 0, 0), (0, WALL_H), (self.win_w, WALL_H), 2)
