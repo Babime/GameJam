@@ -4,6 +4,7 @@ import pygame
 from typing import Callable, Dict, Any
 from dialogue_engine import DialogueRunner, GameVars
 from dialog_ui import DialogueBox
+from core.config import GENERAL_ASSET_DIR, RIGHT_MARGIN, BUSTSHOT_SCALE
 
 def draw_inline_choices(screen: pygame.Surface, dialog: DialogueBox, options, selected_index: int):
     font = dialog.font
@@ -39,6 +40,57 @@ def run_scene(
 
     room = room_factory(win_w, win_h, gvars)
     room.layout_for_dialogue(dialog_top=dialog.box_rect.top)
+
+    # -------- Bustshot setup (preload originals once) --------
+# -------- Bustshot setup (preload originals once) --------
+    def _load_bustshot(name: str, flip_x: bool = True):
+        p = GENERAL_ASSET_DIR / name
+        try:
+            surf = pygame.image.load(str(p)).convert_alpha()
+            if flip_x:
+                surf = pygame.transform.flip(surf, True, False)
+            return surf
+        except Exception:
+            return None
+
+    bust_tony  = _load_bustshot("tony_bustshot.png", flip_x=True)
+    bust_lucas = _load_bustshot("lucas_bustshot.png", flip_x=True)
+
+    def draw_bustshot_if_needed(current_prompt):
+        """
+        Draws the speaker bustshot above the dialog box, right-aligned,
+        with bottom touching the dialog box top and RIGHT_MARGIN from the screen edge.
+        """
+        if not current_prompt or current_prompt.get("type") != "lines":
+            return
+
+        speaker = (current_prompt.get("speaker") or "").strip().lower()
+        shot = None
+        if speaker == "tony":
+            shot = bust_tony
+        elif speaker in ("lucas", "lukas"):
+            shot = bust_lucas
+
+        if not shot:
+            return
+
+        # Target height cannot exceed the available space above the dialog box
+        # (bottom of the image aligns with dialog top; 0px gap as requested).
+        available_h = max(0, dialog.box_rect.top)
+        if available_h <= 0:
+            return
+
+        ow, oh = shot.get_size()
+        base_h = min(oh, available_h)    
+        target_h = max(1, int(round(base_h * BUSTSHOT_SCALE))) 
+        target_w = max(1, int(round(ow * (target_h / oh))))
+        scaled = pygame.transform.smoothscale(shot, (target_w, target_h))
+
+        r = scaled.get_rect()
+        r.bottom = dialog.box_rect.top            # 0px above the dialog box
+        r.right  = win_w - RIGHT_MARGIN           # 40px right margin
+        screen.blit(scaled, r.topleft)
+    # ---------------------------------------------------------
 
     def on_scene_event_done(evt_name: str):
         runner.notify_event_done(evt_name)
@@ -107,6 +159,9 @@ def run_scene(
             room.draw(screen)
         else:
             screen.fill((10, 10, 12))
+
+        # Draw bustshot AFTER the room (so lighting doesn't darken it) and BEFORE the dialog box.
+        draw_bustshot_if_needed(current)
 
         if current and current["type"] == "lines":
             dialog.draw(screen, color=(255, 255, 255))
