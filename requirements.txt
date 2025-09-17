@@ -20,3 +20,4 @@ setuptools==80.9.0
 six==1.17.0
 typing_extensions==4.15.0
 wheel==0.45.1
+PyTMX==3.32

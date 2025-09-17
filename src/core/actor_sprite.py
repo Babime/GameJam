@@ -79,3 +79,62 @@ def create_tony_animator(general_asset_dir: Path, target_height: int = 56) -> Fo
         "left":  [left1, left2],
     }
     return FourDirWalker(frames, frame_ms=140)
+
+# --- Grand-mère & Voiture de police (mêmes conventions que Tony) ---
+
+def create_grandma_animator(general_asset_dir: Path, target_height: int = 54) -> FourDirWalker:
+    """
+    Grand-mère 4 directions, 2 frames/direction.
+    Noms fournis :
+      - up    : granny_walk_facing_back_1.png,  granny_walk_facing_back_2.png
+      - down  : granny_walk_upfront_1.png,      granny_walk_upfront_2.png
+      - right : granny_walk_to_his_right_1.png, granny_walk_to_his_right_2.png
+      - left  : flip horizontal des frames right (comme Tony)
+    target_height ~ autour de Tony (SPRITE_DRAW_H=56), ici 54 par défaut.
+    """
+    up1    = _scale_to_height(_load(general_asset_dir / "granny_walk_facing_back_1.png"), target_height)
+    up2    = _scale_to_height(_load(general_asset_dir / "granny_walk_facing_back_2.png"), target_height)
+    down1  = _scale_to_height(_load(general_asset_dir / "granny_walk_upfront_1.png"),    target_height)
+    down2  = _scale_to_height(_load(general_asset_dir / "granny_walk_upfront_2.png"),    target_height)
+    right1 = _scale_to_height(_load(general_asset_dir / "granny_walk_to_his_right_1.png"), target_height)
+    right2 = _scale_to_height(_load(general_asset_dir / "granny_walk_to_his_right_2.png"), target_height)
+    left1  = pygame.transform.flip(right1, True, False)
+    left2  = pygame.transform.flip(right2, True, False)
+
+    frames = {
+        "up":    [up1, up2],
+        "down":  [down1, down2],
+        "right": [right1, right2],
+        "left":  [left1, left2],
+    }
+    # même cadence que Tony
+    return FourDirWalker(frames, frame_ms=140)
+
+
+def create_police_animator(general_asset_dir: Path, target_height: int = 56) -> FourDirWalker:
+    """
+    Voiture de police : déplacement gauche/droite uniquement pour l’instant.
+    On utilise un seul sprite latéral : police_side.png
+      - right : police_side.png (dupliqué pour 2 frames)
+      - left  : flip horizontal des frames right
+      - up/down : placeholders = mêmes frames que right (jamais utilisées si tu ne commandes que L/R)
+    target_height aligné sur Tony (56 par défaut).
+    """
+    side = _scale_to_height(_load(general_asset_dir / "police_side.png"), target_height)
+
+    right1 = side
+    right2 = side  # on duplique pour garder la même API (2 frames)
+    left1  = pygame.transform.flip(right1, True, False)
+    left2  = pygame.transform.flip(right2, True, False)
+
+    # placeholders pour up/down (pour satisfaire FourDirWalker sans changer l’archi de Tony)
+    up1 = up2 = right1
+    down1 = down2 = right1
+
+    frames = {
+        "up":    [up1, up2],
+        "down":  [down1, down2],
+        "right": [right1, right2],
+        "left":  [left1, left2],
+    }
+    return FourDirWalker(frames, frame_ms=140)
