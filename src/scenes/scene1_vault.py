@@ -14,7 +14,7 @@ SCENE1_VAULT = {
             "type": "line",
             "speaker": "Lukas",
             "text": [
-                "Tony, ils sont à tes trousses. Faut bouger, maintenant."
+                "Tony, ils sont à tes trousses. Faut bouger, maintenant !"
             ],
             "next": "radio_2"
         },
@@ -23,7 +23,7 @@ SCENE1_VAULT = {
             "speaker": "Tony",
             "text": [
                 "J’me suis fait tirer par un putain de garde.",
-                "J’ai laissé tomber ma trousse de secours, mais je vois rien bordel !",
+                "J’ai laissé tomber ma trousse de secours, mais je vois rien, bordel !",
             ],
             "next": "choice_button_0"
         },
@@ -42,23 +42,23 @@ SCENE1_VAULT = {
         # Branch to separate lines depending on player's answer
         "branch_medkit_lines": {
             "type": "branch_choice_correct",
-            "if_correct": "lucas_medkit_yes",
-            "if_wrong":   "lucas_medkit_no"
+            "if_correct": "Lukas_medkit_yes",
+            "if_wrong":   "Lukas_medkit_no"
         },
 
         # Lukas speaks (YES branch)
-        "lucas_medkit_yes": {
+        "Lukas_medkit_yes": {
             "type": "line",
             "speaker": "Lukas",
             "text": [
-                "Attends…",
+                "Attends...",
                 "Oui, je la vois ! Juste à ta droite !"
             ],
             "next": "announce_follow_medkit_help"
         },
 
         # Lukas speaks (NO branch)
-        "lucas_medkit_no": {
+        "Lukas_medkit_no": {
             "type": "line",
             "speaker": "Lukas",
             "text": [
@@ -80,7 +80,7 @@ SCENE1_VAULT = {
         "announce_follow_medkit_help": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": "Tony fait confiance à Lucas.",
+            "text": "Tony fait confiance à Lukas.",
             "next": "med_follow_helpful_effects"
         },
         "med_follow_helpful_effects": {
@@ -93,7 +93,7 @@ SCENE1_VAULT = {
         "announce_follow_medkit_harm": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": "Tony fait confiance à Lucas.",
+            "text": "Tony fait confiance à Lukas.",
             "next": "med_follow_harm_effects"
         },
         "med_follow_harm_effects": {
@@ -112,8 +112,7 @@ SCENE1_VAULT = {
         "tony_yells_seen_medkit": {
             "type": "line",
             "speaker": "Tony",
-            "text": "LUCAS ENFOIRÉ DE MERDE TU LA VOIS PAS ALOS QU'ELLE EST SUR MON CHEMIN !!",
-            "next": "cinematic_pick_medkit_after_yell"
+            "text": "LUKAS, PUTAIN ! Tu me dis qu’elle est pas là alors qu’elle est juste devant moi ?! T’essaies de me faire tuer ou quoi ?!",            "next": "cinematic_pick_medkit_after_yell"
         },
         "cinematic_pick_medkit_after_yell": {
             "type": "wait_scene",
@@ -124,7 +123,7 @@ SCENE1_VAULT = {
         "announce_ignore_medkit_help": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": "Tony ne fait pas confiance à Lucas.",
+            "text": "Tony ne fait pas confiance à Lukas.",
             "next": "med_ignore_helpful_effects"
         },
         "med_ignore_helpful_effects": {
@@ -137,7 +136,7 @@ SCENE1_VAULT = {
         "announce_ignore_medkit_harm": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": "Tony ne fait pas confiance à Lucas.",
+            "text": "Tony ne fait pas confiance à Lukas.",
             "next": "med_ignore_harm_effects"
         },
         "med_ignore_harm_effects": {
@@ -170,8 +169,8 @@ SCENE1_VAULT = {
             "speaker": "Tony",
             "text": [
                 "Ok, j’avance.",
-                "…Deux boutons sur la porte. Aucun marquage.",
-                "J’appuie sur lequel ?"
+                "...Deux boutons sur la porte. Aucun marquage.",
+                "Je fais quoi, Lukas ? J’appuie sur lequel ?"
             ],
             "next": "choice_button"
         },
@@ -200,7 +199,7 @@ SCENE1_VAULT = {
         "announce_follow_buttons_ok": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": "Tony fait confiance à Lucas.",
+            "text": "Tony fait confiance à Lukas.",
             "next": "follow_ok_effects"
         },
         "follow_ok_effects": {
@@ -217,7 +216,7 @@ SCENE1_VAULT = {
             "type": "line",
             "speaker": "Tony",
             "text": [
-                "*BIP* …Ça s’ouvre !",
+                "*BIP* ...Ça s’ouvre !",
                 "Oh, c’était moins une."
             ],
             "next": "exit_line"
@@ -227,7 +226,7 @@ SCENE1_VAULT = {
         "announce_follow_buttons_bad": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": "Tony fait confiance à Lucas.",
+            "text": "Tony fait confiance à Lukas.",
             "next": "follow_bad_effects"
         },
         "follow_bad_effects": {
@@ -249,7 +248,9 @@ SCENE1_VAULT = {
         "tony_harsh_line": {
             "type": "line",
             "speaker": "Tony",
-            "text": "…Je me rappellerai de ça, Lucas. Passe le bonsoir à ta femme et tes enfants.",
+            "text": ["Sérieux, Lukas ?! Tu m’as dit le rouge, et il se passe rien ! J’te fais confiance et tu me plantes ? ",
+            "...Je me rappellerai de ça, Lukas. Passe le bonjour à ta femme et tes gosses.",
+            ],
             "next": "press_green_to_open_after_red_follow"
         },
         "press_green_to_open_after_red_follow": {
@@ -262,7 +263,7 @@ SCENE1_VAULT = {
         "announce_ignore_buttons_right": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": "Tony ne fait pas confiance à Lucas.",
+            "text": "Tony ne fait pas confiance à Lukas.",
             "next": "ignore_right_effects"
         },
         "ignore_right_effects": {
@@ -284,7 +285,7 @@ SCENE1_VAULT = {
         "tony_okok_green": {
             "type": "line",
             "speaker": "Tony",
-            "text": "Ok ok, la verte… voilà !",
+            "text": "Ok ok, la verte alors... Voilà !",
             "next": "press_green_to_open_after_red_ignore_right"
         },
         "press_green_to_open_after_red_ignore_right": {
@@ -297,7 +298,7 @@ SCENE1_VAULT = {
         "announce_ignore_buttons_wrong": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": "Tony ne fait pas confiance à Lucas.",
+            "text": "Tony ne fait pas confiance à Lukas.",
             "next": "ignore_wrong_effects"
         },
         "ignore_wrong_effects": {
@@ -313,14 +314,14 @@ SCENE1_VAULT = {
         "ignore_wrong_line": {
             "type": "line",
             "speaker": "Tony",
-            "text": "…Je me rappellerai de ça, Lucas. Passe le bonsoir à ta femme et tes enfants.",
+            "text": "...Je me rappellerai de ça, Lukas. Passe le bonjour à ta femme et tes gosses.",
             "next": "exit_line"
         },
 
         # ---- Exit ----
         "exit_line": {
             "type": "line",
-            "speaker": "Lucas",
+            "speaker": "Lukas",
             "text": "...",
             "next": "end"
         },
