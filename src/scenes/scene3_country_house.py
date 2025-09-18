@@ -8,16 +8,17 @@ SCENE3_MARTHA = {
         "intro_1": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": ("Depuis des heures, Tony roule sur les routes de campagne. "
-                     "Le jet privé décolle bientôt, mais la balle du flic l’a bien touché. "
-                     "Il recommence à perdre du sang."),
+            "text": ["Depuis des heures, Tony roule sur les routes de campagne. ",
+                     "Le jet privé décolle bientôt, mais la balle du flic l’a bien touché. ",
+                     "Il recommence à perdre du sang.",
+                     ],
             "next": "tony_intro"
         },
         "tony_intro": {
             "type": "line",
             "speaker": "Tony",
             "text": [
-                "Putain... je vais pas tenir. Je perds trop de sang... Il faut que je m'arrête."
+                "Putain... je vais pas tenir. Je perds trop de sang... Faut que je m'arrête."
             ],
             "next": "house_arrival"
         },
@@ -46,7 +47,7 @@ SCENE3_MARTHA = {
             "type": "line",
             "speaker": "Martha",
             "text": [
-                "Harold ? Harold, c’est toi ? Tu rentres bien tôt ce soir... Oh, excusez-moi, je pensais que c'était mon mari !",
+                "Harold ? Harold, c’est toi ? Tu rentres bien tôt ce soir... Oh, excusez-moi, je croyais que c'était mon mari ! ",
                 "Mon Dieu, vous êtes blessé !"
             ],
             "next": "tony_beg"
@@ -55,8 +56,8 @@ SCENE3_MARTHA = {
             "type": "line",
             "speaker": "Tony",
             "text": [
-                "Ne vous inquiétez pas, c’est rien... juste une égratignure.",
-                "J’ai juste besoin de quelques heures pour me reposer et je repartirai.",
+                "Ne vous inquiétez pas, c’est rien... juste une égratignure. ",
+                "J’ai juste besoin de quelques heures pour me reposer, après je repartirai.",
             ],
             "next": "choice_martha"
         },
@@ -102,7 +103,7 @@ SCENE3_MARTHA = {
         "leave_tony_nowhere": {
             "type": "line",
             "speaker": "Tony",
-            "text": "... Je comprends, mais je n'ai nulle part où aller ...",
+            "text": "... Je comprends, mais je n'ai nulle part où aller...",
             "next": "ignore_effects_redirect"
         },
 
@@ -134,7 +135,7 @@ SCENE3_MARTHA = {
         "line_martha_invite": {
             "type": "line",
             "speaker": "Martha",
-            "text": "Entrez donc, j'ai des pansements pour vous",
+            "text": "Entrez donc, j'ai de quoi vous soigner.",
             "next": "line_tony_accept"
         },
         "line_tony_accept": {
@@ -151,7 +152,9 @@ SCENE3_MARTHA = {
         "line_martha_thinks": {
             "type": "line",
             "speaker": "Martha",
-            "text": "Je me demande quand Arold rentre, il m'a dit qu'il était à la poursuite d'un voleur. Le monde dans lequel on vit. A mon époque ...",
+            "text": ["Je me demande quand Harold rentre, il m'a dit qu'il était à la poursuite d'un voleur. ", 
+            "Le monde dans lequel on vit... À mon époque ...",
+            ],
             "next": "cin_martha_back_home"
         },
         "cin_martha_back_home": {
@@ -167,13 +170,15 @@ SCENE3_MARTHA = {
         "line_narrator_wakeup": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": "Tony se réveilla quelqes heures plus tard en sursaut. Entendant le bruit des sirenes il se prevcipite a fuir la maison, remarquant en passant par le salon un détail, qu'il n'a pas remarqué hier à cause de la fatigue, un portrait d'un vieil homme en uniforme de police ... Arold",
+            "text": ["Tony se réveille quelques heures plus tard en sursaut. En entendant le bruit des sirènes, il se précipite pour fuir la maison. ",
+             "En passant par le salon, il remarque un détail qu'il n'avait pas vu la veille à cause de la fatigue : le portrait d'un vieil homme en uniforme de police... Harold.",
+            ],
             "next": "line_tony_mistrust"
         },
         "line_tony_mistrust": {
             "type": "line",
             "speaker": "Tony",
-            "text": "Je le savais, je ne peux faire confiance qu'à moi même !",
+            "text": "Je le savais, je ne peux faire confiance qu'à moi-même !",
             "next": "end"
         },
 
@@ -186,7 +191,7 @@ SCENE3_MARTHA = {
         "line_tony_ok_cellar": {
             "type": "line",
             "speaker": "Tony",
-            "text": "(C'est l'endroit parfait pour se reposer et de semer les flics !). Merci infiniment",
+            "text": "(C'est l'endroit parfait pour me reposer et semer les flics !). Merci infiniment.",
             "next": "cin_cellar_tony_leave"
         },
         "cin_cellar_tony_leave": {
@@ -204,7 +209,7 @@ SCENE3_MARTHA = {
         "line_martha_thinks_cellar": {
             "type": "line",
             "speaker": "Martha",
-            "text": "Je me demande quand Arold rentre, il m'a dit qu'il était à la poursuite d'un voleur. Le monde dans lequel on vit. A mon époque ...",
+            "text": "Je me demande quand Harold rentre, il m'a dit qu'il était à la poursuite d'un voleur. Le monde dans lequel on vit... À mon époque...",
             "next": "cin_martha_back_home_cellar"
         },
         "cin_martha_back_home_cellar": {
@@ -222,13 +227,13 @@ SCENE3_MARTHA = {
         "line_cellar_narrator_wakeup": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": "Tony se réveilla quelques heures plus tard en sursaut. Entendant le bruit des sirènes, il se précipite et fuit en voiture.",
+            "text": "Tony se réveille quelques heures plus tard en sursaut. En entendant le bruit des sirènes, il se précipite et fuit en voiture.",
             "next": "line_tony_cellar_sirens"
         },
         "line_tony_cellar_sirens": {
             "type": "line",
             "speaker": "Tony",
-            "text": "Le son venait du côté de la maison de la vieille... Heureusement que j'ai passé la nuit ici, au moins ils ne m'ont pas vu.",
+            "text": "Le bruit venait du côté de la maison de la vieille... Heureusement que j'ai passé la nuit ici, au moins ils ne m'ont pas vu.",
             "next": "cellar_bonus_effects"
         },
         "cellar_bonus_effects": {
@@ -257,13 +262,13 @@ SCENE3_MARTHA = {
         "ignore_tony_line": {
             "type": "line",
             "speaker": "Tony",
-            "text": "C’est gentil de votre part mais je ne veux pas vous déranger, je vais passer la nuit dans la voiture",
+            "text": "C’est gentil de votre part, mais je ne veux pas vous déranger. Je vais passer la nuit dans ma voiture.",
             "next": "ignore_martha_line"
         },
         "ignore_martha_line": {
             "type": "line",
             "speaker": "Martha",
-            "text": "Dans ce cas, vous pouvez rester ici à côté de la maison. Si vous avez besoin de quoi que ce soit, n’hésitez pas à toquer à la porte.",
+            "text": "Dans ce cas, vous pouvez rester ici à côté de la maison. Si vous avez besoin de quoi que ce soit, n’hésitez pas à frapper à la porte.",
             "next": "ignore_anim_martha_back"
         },
         "ignore_anim_martha_back": {
@@ -289,7 +294,7 @@ SCENE3_MARTHA = {
         "ignore_tony_alarm": {
             "type": "line",
             "speaker": "Tony",
-            "text": "Merde, ils m’ont déjà trouvé ? Est-ce que la vieille les a appelés ? Vaut mieux se barrer tout de suite.",
+            "text": "Merde, ils m’ont déjà trouvé ? Est-ce que la vieille les a appelés ? Vaudrait mieux se barrer tout de suite.",
             "next": "ignore_car_speed"
         },
         "ignore_car_speed": {
@@ -302,7 +307,7 @@ SCENE3_MARTHA = {
         "mistrust_override_start": {
             "type": "line",
             "speaker": "Tony",
-            "text": "C’est gentil de votre part mais je ne veux pas vous déranger, je vais passer la nuit dans la voiture",
+            "text": "C’est gentil de votre part, mais je ne veux pas vous déranger. Je vais passer la nuit dans ma voiture.",
             "next": "ignore_effects_redirect"
         },
         "ignore_effects_redirect": {
@@ -313,7 +318,7 @@ SCENE3_MARTHA = {
         "mistrust_martha_reply": {
             "type": "line",
             "speaker": "Martha",
-            "text": "Dans ce cas, vous pouvez restez ici à côté de la maison, si vous avez besoin de quoique ce soit, n’hésitez pas à toquer à la porte",
+            "text": "Dans ce cas, vous pouvez restez ici à côté de la maison. Si vous avez besoin de quoi que ce soit, n’hésitez pas à frapper à la porte",
             "next": "mistrust_cin_martha_turn"
         },
         "mistrust_cin_martha_turn": {
@@ -336,7 +341,7 @@ SCENE3_MARTHA = {
         "mistrust_tony_thinks": {
             "type": "line",
             "speaker": "Tony",
-            "text": "Merde, ils m’ont déjà trouvé ? Est ce que la vieille les as appelé ? Vaudrait mieux se barrer tout de suite",
+            "text": "Merde, ils m’ont déjà trouvé ? Est-ce que la vieille les a appelés ? Vaudrait mieux se barrer tout de suite.",
             "next": "mistrust_car_speed_off"
         },
         "mistrust_car_speed_off": {
@@ -349,7 +354,10 @@ SCENE3_MARTHA = {
         "exit_chase": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": "Harold aperçoit la voiture de Tony, il découvre que c'est la voiture du braqueur qu'il recherche. Tony prend peur et s’enfuit par la fenêtre se situant à l'arrière de la maison et se précipite vers sa voiture. Harold le poursuit en voiture de police.",
+            "text": ["Harold aperçoit la voiture de Tony et découvre que c'est celle du braqueur qu'il recherche. ",
+             "Tony prend peur, s’enfuit par la fenêtre se situant à l'arrière de la maison et se précipite vers sa voiture. ",
+             "Harold le poursuit en voiture de police.",
+            ],
             "next": "end"
         },
         "exit_safe": {
@@ -361,7 +369,7 @@ SCENE3_MARTHA = {
         "exit_car": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": "Tony passe la nuit dans sa voiture, mal en point, avant de repartir. Harold ne s’est aperçu de rien.",
+            "text": "Tony passe la nuit dans sa voiture, mal au point, puis repart au petit matin. Harold n'a rien remarqué.",
             "next": "end"
         },
 

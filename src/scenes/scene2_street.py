@@ -6,16 +6,17 @@ SCENE2_STREET = {
         "intro_1": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": ("Tony sort de la banque. L'allée est sombre, les sirènes se rapprochent. "
-                     "Soudain, une silhouette apparaît, un homme."),
+            "text": ["Tony sort de la banque. L'allée est sombre, les sirènes se rapprochent. ",
+                     "Soudain, une silhouette apparaît : un homme.",
+            ],
             "next": "radio_1"
         },
         "radio_1": {
             "type": "line",
             "speaker": "Tony",
             "text": [
-                "Qui… qui êtes-vous ? Faites comme si je n'étais pas là."
-                "Je dois passer. Vite."
+                "Qui... qui êtes-vous ? Faites comme si je n'étais pas là. ",
+                "Je dois passer. Vite.",
             ],
             "next": "radio_2"
         },
@@ -23,8 +24,8 @@ SCENE2_STREET = {
             "type": "line",
             "speaker": "John",
             "text": [
-                "Calmez-vous. Je peux sûrement vous aider à fuir plus vite.",
-                "Je sais ce qui se trouve dans les alentours"
+                "Calmez-vous. Je peux sûrement vous aider à filer plus vite. ",
+                "Je connais bien le quartier."
             ],
             "next": "choice_direction_0"
         },
@@ -32,7 +33,7 @@ SCENE2_STREET = {
         # ---- Choice about the direction (single-line menu) ----
         "choice_direction_0": {
             "type": "choice",
-            "prompt": "Quelle direction conseiller ?",
+            "prompt": "Quelle direction lui conseiller ?",
             "options": [
                 { "id": "direction_right", "label": "À droite (vers le garage)",  "correct": True  },   # helpful
                 { "id": "direction_left",  "label": "À gauche (vers la police)",  "correct": False }   # harmful
@@ -53,7 +54,7 @@ SCENE2_STREET = {
             "speaker": "John",
             "text": [
                 "Tournez à droite, il y a un garage ! Dépêchez-vous.",
-                "Vous y trouverez ma voiture avec la clé dessous."
+                "Vous y trouverez ma voiture, la clé est planquée dessous."
             ],
             "next": "decide_direction"
         },
@@ -63,7 +64,7 @@ SCENE2_STREET = {
             "type": "line",
             "speaker": "John",
             "text": [
-                "Allez à gauche, c'est plus sûr ! Vous pourrez vous échapper par là.",
+                "Allez à gauche, c'est plus sûr ! Vous pourrez vous échapper par là. ",
                 "Je peux vous assurer que vous allez les semer."
             ],
             "next": "decide_direction"
@@ -154,15 +155,15 @@ SCENE2_STREET = {
             "type": "line",
             "speaker": "Tony",
             "text": [
-                "Putain ! LES FLICS !!",
-                "Ce John ne s'en sortira pas comme ça !"
+                "Putain ! LES FLICS !!!!",
+                "Ce John ne va pas s'en tirer comme ça !"
             ],
             "next": "police_chase"
         },
         "police_chase": {
             "type": "line",
             "speaker": "Tony",
-            "text": "Je dois me dépêcher de retourner vers le garage ARGHH CE JOHN!",
+            "text": "Faut que je me dépêche de retourner au garage... ARGGH, ce John !",
             "next": "police_chase_effects"
         },
         "police_chase_effects": {
@@ -185,7 +186,9 @@ SCENE2_STREET = {
         "tony_spots_lights": {
             "type": "line",
             "speaker": "Tony",
-            "text": "Mais il m'a pris pour un con lui, on voit les lumières à gauche. Mieux vaut tenter mon coup dans le garage, on sait jamais, je peux trouver une voiture !",
+            "text": ["Mais il m'a pris pour un con lui, on voit les gyrophares à gauche... ",
+             "Mieux vaut tenter mon coup dans le garage, on sait jamais, je peux trouver une voiture !",
+            ],
             "next": "cinematic_ignore_wrong_part2"
         },
         "cinematic_ignore_wrong_part2": {
@@ -196,7 +199,7 @@ SCENE2_STREET = {
         "tony_found_car": {
             "type": "line",
             "speaker": "Tony",
-            "text": "Parfait une voiture !",
+            "text": "Parfait, une bagnole !",
             "next": "escape_tense"
         },
 
@@ -209,7 +212,9 @@ SCENE2_STREET = {
         "tony_defies_stranger": {
             "type": "line",
             "speaker": "Tony",
-            "text": "Mais il m'a pris pour un con lui, il croit vraimenet que je vais faire confiance à un inconnu ? Il me demande d'aller au garage, je vais à l'opposer",
+            "text": ["Mais il m'a pris pour un con lui, il croit vraiment que je vais faire confiance à un inconnu ? ",
+            "Il me dit d'aller au garage, je pars à l'opposé.",
+            ],
             "next": "cinematic_ignore_help_left"
         },
         "cinematic_ignore_help_left": {
@@ -220,7 +225,7 @@ SCENE2_STREET = {
         "tony_police_spotted": {
             "type": "line",
             "speaker": "Tony",
-            "text": "Putain ! LES FLICS !!",
+            "text": "Putain ! LES FLICS !!!!",
             "next": "cinematic_ignore_help_right_up"
         },
         "cinematic_ignore_help_right_up": {
@@ -231,7 +236,7 @@ SCENE2_STREET = {
         "tony_found_keys": {
             "type": "line",
             "speaker": "Tony",
-            "text": "Parfait des clés de voiture !",
+            "text": "Parfait, des clés de voiture !",
             "next": "escape_car_then_why"
         },
 
@@ -250,8 +255,8 @@ SCENE2_STREET = {
             "type": "line",
             "speaker": "Tony",
             "text": [
-                "Putain ! LES FLICS !!",
-                "Ce John ne s'en sortira pas comme ça !"
+                "Putain ! LES FLICS !!!!",
+                "Ce John ne va pas s'en tirer comme ça !"
             ],
             "next": "cinematic_follow_wrong_right"
         },
@@ -263,7 +268,7 @@ SCENE2_STREET = {
         "tony_spots_garage_hide": {
             "type": "line",
             "speaker": "Tony",
-            "text": "Un garage ! parfait, heureusement que je sais volé une voiture !",
+            "text": "Un garage ! Parfait, heureusement que je sais voler une voiture !",
             "next": "cinematic_follow_wrong_up"
         },
         "cinematic_follow_wrong_up": {
@@ -277,8 +282,8 @@ SCENE2_STREET = {
             "type": "line",
             "speaker": "Tony",
             "text": [
-                "HOP, clé trouvée. Allez, je me tire d'ici !",
-                "Ce John ne me l'a pas mise à l'envers..."
+                "Hop, clé trouvée. Allez, je me tire d'ici ! ",
+                "Finalement, ce John ne me l'a pas mise à l'envers..."
             ],
             "next": "escape_car"
         },
@@ -286,7 +291,7 @@ SCENE2_STREET = {
             "type": "line",
             "speaker": "Tony",
             "text": [
-                "Bon, je prends la caisse ...",
+                "Bon, je prends la caisse ... ",
                 "Heureusement que j'ai appris à casser des vitres de voitures."
             ],
             "next": "escape_car"
@@ -320,7 +325,7 @@ SCENE2_STREET = {
         "tony_memory_line": {
             "type": "line",
             "speaker": "Tony",
-            "text": "Je ne sais pas qui t'es mais, je m'en rappelerai ... ",
+            "text": "Je ne sais pas qui t'es, mais je m'en rappellerai... ",
             "next": "tony_final_response"
         },
 
@@ -328,7 +333,7 @@ SCENE2_STREET = {
         "tony_final_response": {
             "type": "line",
             "speaker": "Tony",
-            "text": "Pour l'instant, je les ai semé... On verra le reste.",
+            "text": "Pour l'instant, je les ai semés... On verra la suite.",
             "next": "end"
         },
         "end": { "type": "end" }
