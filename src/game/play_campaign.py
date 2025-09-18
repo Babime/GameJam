@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 import pygame
+from src.audio.bgm import play_bgm
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
@@ -192,8 +193,8 @@ def make_room_scene2_street(win_w, win_h, gvars):
 # Only run Scene 2 (street). Other scenes are left commented out.
 CAMPAIGN = [
     {"id": "scene1_vault", "scene": SCENE1_VAULT, "room_factory": make_room_scene1},
-    {"id": "scene2_street", "scene": SCENE2_STREET, "room_factory": make_room_scene2_street},
-    {"id": "martha_scene", "scene": SCENE3_MARTHA, "room_factory": make_room_scene2},
+    {"id": "scene2_street", "scene": SCENE2_STREET, "room_factory": make_room_scene2_street, "bgm": "scene2bis.mp3", "bgm_volume": 0.4},
+    {"id": "martha_scene", "scene": SCENE3_MARTHA, "room_factory": make_room_scene2, "bgm": "scene3.mp3", "bgm_volume": 0.65},
 ]
 
 
@@ -215,6 +216,8 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Tony – Campaign")
+
+    play_bgm("scene1.mp3", volume=0.5)
 
     show_start_screen(screen, WIDTH, HEIGHT)
 
@@ -239,6 +242,13 @@ def main():
         _black_pause(screen, SCENE_INTRO_BLACK_MS)
         scene_def = entry["scene"]
         factory   = entry["room_factory"]
+
+        # --- musique de fond (facultatif par scène) ---
+        bgm_name = entry.get("bgm")
+        if bgm_name:
+            vol = float(entry.get("bgm_volume", 0.7))
+            play_bgm(bgm_name, volume=vol)
+
         run_scene(screen, dialog, scene_def, factory, gvars, fps=FPS, rng_seed=None)
         # Allow early quit
         for ev in pygame.event.get(pygame.QUIT):
