@@ -6,6 +6,17 @@ from dialogue_engine import DialogueRunner, GameVars
 from dialog_ui import DialogueBox
 from core.config import GENERAL_ASSET_DIR, RIGHT_MARGIN, BUSTSHOT_SCALE
 
+from scenes.scene_airport_dialogue import SCENE_AIRPORT_CAUGHT, SCENE_AIRPORT_ESCAPED
+
+def select_airport_scene(gvars):
+    if gvars.trust < 40 or gvars.police_gap < 0:
+        return SCENE_AIRPORT_CAUGHT
+    else:
+        return SCENE_AIRPORT_ESCAPED
+
+
+
+
 def draw_inline_choices(screen: pygame.Surface, dialog: DialogueBox, options, selected_index: int):
     font = dialog.font
     parts = []
@@ -112,10 +123,11 @@ def run_scene(
         nonlocal current, show_room, choice_index
         current = runner.get_prompt()
         if current and current["type"] == "lines":
-            # same reveal rule you used: show the room once Lukas starts talking
-            if not show_room and current.get("speaker") == "Lukas":
-                show_room = True
-            dialog.set_text(f'{current["speaker"]}: {current["text"]}')
+         # Show the room for all scenes
+           if not show_room:
+               show_room = True
+           dialog.set_text(f'{current["speaker"]}: {current["text"]}')
+
         elif current and current["type"] == "choice":
             choice_index = 0
         maybe_start_scene_event()

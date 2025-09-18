@@ -178,9 +178,28 @@ class DialogueRunner:
                 self.finished = True
                 break
 
-            else:
-                raise ValueError(f"Unsupported node type: {ntype}")
+            elif ntype == "branch_condition":
+             # Évaluer les branches selon les conditions
+                selected = None
+                for branch in node.get("branches", []):
+                   cond = branch.get("cond")
+                   next_id = branch.get("next")
+
+                   if cond == "police" and self.gvars.police_gap < 0:
+                      selected = next_id
+                      break
+                   elif cond == "escape" and self.gvars.trust >= 40 and self.gvars.police_gap >= 0:
+                     selected = next_id
+                     break
+
+                if selected is None:
+                 # fallback : première branche si aucune condition n'est vraie
+                    selected = node["branches"][0]["next"]
+
+                self.current_id = selected
+                continue
 
     def _tony_follows(self, trust: int) -> bool:
         # Deterministic threshold
         return trust >= FOLLOW_THRESHOLD
+    

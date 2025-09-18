@@ -21,6 +21,11 @@ from core.scene_runner import run_scene
 from scenes.scene1_vault import SCENE1_VAULT
 from scenes.vault_room import VaultRoomScene
 
+# ajouts pour scene 4 
+from scenes.scene_airport_dialogue import SCENE_AIRPORT_CAUGHT, SCENE_AIRPORT_ESCAPED
+from core.scene_helpers import select_airport_scene
+from scenes.airport_room import AirportRoomScene
+
 def make_room_scene1(win_w, win_h, gvars):
     return VaultRoomScene(
         win_w=win_w, win_h=win_h,
@@ -29,10 +34,19 @@ def make_room_scene1(win_w, win_h, gvars):
         game_vars=gvars
     )
 
+# pour airport
+def make_room_airport(win_w, win_h, gvars):
+    return AirportRoomScene(
+        win_w=win_w, win_h=win_h,
+        hud_font_path=FONT_PATH,
+        game_vars=gvars
+    )
 CAMPAIGN = [
     {"id": "scene1_vault", "scene": SCENE1_VAULT, "room_factory": make_room_scene1},
     # {"id": "scene2_xyz", "scene": SCENE2, "room_factory": make_room_scene2},
     # {"id": "scene3_abc", "scene": SCENE3, "room_factory": make_room_scene3},
+    {"id": "scene4_airport", "scene": None, "room_factory": make_room_airport},  # None car on choisit dynamiquement
+
 ]
 
 def main():
@@ -53,10 +67,16 @@ def main():
     gvars = GameVars(trust=INITIAL_TRUST, police_gap=INITIAL_POLICE_GAP)
 
     for entry in CAMPAIGN:
-        scene_def = entry["scene"]
-        factory   = entry["room_factory"]
+        if entry["id"] == "scene4_airport":
+            # choisir le bon scénario en fonction des stats
+            scene_def = select_airport_scene(gvars)
+        else:
+            scene_def = entry["scene"]
+
+        factory = entry["room_factory"]
         run_scene(screen, dialog, scene_def, factory, gvars, fps=FPS, rng_seed=RNG_SEED)
-        # Allow early quit
+
+        # early quit
         for ev in pygame.event.get(pygame.QUIT):
             pygame.quit()
             return
