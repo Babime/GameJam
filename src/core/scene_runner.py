@@ -3,7 +3,7 @@ import pygame
 from typing import Callable, Dict, Any
 from dialogue_engine import DialogueRunner, GameVars
 from dialog_ui import DialogueBox
-from core.config import GENERAL_ASSET_DIR, RIGHT_MARGIN, BUSTSHOT_SCALE, FONT_PATH
+from core.config import GENERAL_ASSET_DIR, RIGHT_MARGIN, BUSTSHOT_SCALE, FONT_PATH, ASSETS_DIR
 
 # ---------- Choice rendering ----------
 def draw_inline_choices(screen: pygame.Surface, dialog: DialogueBox, options, selected_index: int):
@@ -138,11 +138,19 @@ def run_scene(
             return surf
         except Exception:
             return None
+        
+    def _load_bustshot_path(path, flip_x: bool = True):
+        try:
+            surf = pygame.image.load(str(path)).convert_alpha()
+            return pygame.transform.flip(surf, True, False) if flip_x else surf
+        except Exception:
+            return None
 
     bust_tony   = _load_bustshot("tony_bustshot.png",   flip_x=True)
     bust_lucas  = _load_bustshot("lucas_bustshot.png",  flip_x=True)
     bust_martha = _load_bustshot("granny_bustshot.png", flip_x=True)
     bust_stranger = _load_bustshot("stranger_bustshot.png", flip_x=True)
+    bust_harold = _load_bustshot_path(ASSETS_DIR / "airport" / "harold.png", flip_x=True)
 
     def draw_bustshot_if_needed(current_prompt):
         if not current_prompt or current_prompt.get("type") != "lines":
@@ -157,6 +165,8 @@ def run_scene(
             shot = bust_martha
         elif speaker == "john":
             shot = bust_stranger
+        elif speaker.startswith("harold"):
+            shot = bust_harold
         if not shot:
             return
         available_h = max(0, dialog.box_rect.top)
@@ -217,6 +227,7 @@ def run_scene(
     show_room = False
     current = runner.get_prompt()
     if current and current["type"] == "lines":
+        show_room = True
         dialog.set_text(f'{current["speaker"]}: {current["text"]}')
 
     choice_index = 0
@@ -228,6 +239,7 @@ def run_scene(
         if current and current["type"] == "lines":
             if not show_room and current.get("speaker") in ("Martha", "Tony"):
                 show_room = True
+            show_room = True
             dialog.set_text(f'{current["speaker"]}: {current["text"]}')
         elif current and current["type"] == "choice":
             choice_index = 0
@@ -307,5 +319,5 @@ def run_scene(
 
         pygame.display.flip()
 
-        if runner.is_finished():
+        if runner.is_finished() and getattr(room, "done", True):
             return
