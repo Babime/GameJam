@@ -1,4 +1,3 @@
-# dialog_ui.py
 import os
 from pathlib import Path
 import pygame

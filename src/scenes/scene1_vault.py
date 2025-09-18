@@ -54,7 +54,7 @@ SCENE1_VAULT = {
                 "Attends…",
                 "Oui, je la vois ! Juste à ta droite !"
             ],
-            "next": "decide_medkit"
+            "next": "announce_follow_medkit_help"
         },
 
         # Lukas speaks (NO branch)
@@ -64,7 +64,7 @@ SCENE1_VAULT = {
             "text": [
                 "Laisse tomber la trousse. File à la porte !"
             ],
-            "next": "decide_medkit"
+            "next": "announce_follow_medkit_harm"
         },
 
         # Deterministic follow/ignore based on trust (>=60 = follow)
@@ -86,7 +86,7 @@ SCENE1_VAULT = {
         "med_follow_helpful_effects": {
             "type": "effects",
             # follow helpful: increase trust and police gap
-            "effects": {"trust": +8, "police_gap": +2},
+            "effects": {"trust": +6, "police_gap": +2},
             "next": "cinematic_to_kit"
         },
 
@@ -99,7 +99,25 @@ SCENE1_VAULT = {
         "med_follow_harm_effects": {
             "type": "effects",
             # follow harmful: decrease trust and increase police gap
-            "effects": {"trust": -8, "police_gap": +2},
+            "effects": {"trust": -6, "police_gap": +2},
+            "next": "cinematic_stop_near_medkit"
+        },
+
+        # NEW: stop well before medkit, yell, THEN go pick it up like the helpful path, THEN go to door
+        "cinematic_stop_near_medkit": {
+            "type": "wait_scene",
+            "event": "go_near_medkit_pause",
+            "next": "tony_yells_seen_medkit"
+        },
+        "tony_yells_seen_medkit": {
+            "type": "line",
+            "speaker": "Tony",
+            "text": "LUCAS ENFOIRÉ DE MERDE TU LA VOIS PAS ALOS QU'ELLE EST SUR MON CHEMIN !!",
+            "next": "cinematic_pick_medkit_after_yell"
+        },
+        "cinematic_pick_medkit_after_yell": {
+            "type": "wait_scene",
+            "event": "go_to_medkit",
             "next": "cinematic_to_door"
         },
 
@@ -112,7 +130,7 @@ SCENE1_VAULT = {
         "med_ignore_helpful_effects": {
             "type": "effects",
             # ignore helpful: decrease trust and increase police gap
-            "effects": {"trust": -6, "police_gap": +2},
+            "effects": {"trust": -4, "police_gap": +2},
             "next": "cinematic_to_door"
         },
 
@@ -125,7 +143,7 @@ SCENE1_VAULT = {
         "med_ignore_harm_effects": {
             "type": "effects",
             # ignore harmful: heavily decrease trust and decrease police gap
-            "effects": {"trust": -15, "police_gap": -2},
+            "effects": {"trust": -10, "police_gap": -2},
             "next": "cinematic_wander_medkit"
         },
 
@@ -187,7 +205,7 @@ SCENE1_VAULT = {
         },
         "follow_ok_effects": {
             "type": "effects",
-            "effects": {"trust": +10, "police_gap": +2},
+            "effects": {"trust": +8, "police_gap": +2},
             "next": "press_green_then_follow_ok"
         },
         "press_green_then_follow_ok": {
@@ -214,7 +232,7 @@ SCENE1_VAULT = {
         },
         "follow_bad_effects": {
             "type": "effects",
-            "effects": {"trust": -12, "police_gap": -2},
+            "effects": {"trust": -10, "police_gap": -2},
             "next": "press_red_then_pause"
         },
         "press_red_then_pause": {
@@ -249,7 +267,7 @@ SCENE1_VAULT = {
         },
         "ignore_right_effects": {
             "type": "effects",
-            "effects": {"trust": +6, "police_gap": -2},
+            "effects": {"trust": +3, "police_gap": -2},
             "next": "press_red_then_pause_ignore_right"
         },
         "press_red_then_pause_ignore_right": {
@@ -284,7 +302,7 @@ SCENE1_VAULT = {
         },
         "ignore_wrong_effects": {
             "type": "effects",
-            "effects": {"trust": -8, "police_gap": +2},
+            "effects": {"trust": -6, "police_gap": +2},
             "next": "press_green_after_ignore_wrong"
         },
         "press_green_after_ignore_wrong": {

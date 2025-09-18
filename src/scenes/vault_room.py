@@ -1,4 +1,3 @@
-# src/scenes/vault_room.py
 from __future__ import annotations
 from pathlib import Path
 import math
@@ -95,6 +94,14 @@ class VaultRoomScene:
     """
     Encapsulates the vault room: assets, layout, scripted input, update, draw.
     Tony is always AI-driven; the player never moves him.
+
+    Supported events:
+      - 'go_to_medkit'         : walk to medkit, hide on contact, finish
+      - 'wander_then_medkit'   : wander aimlessly ~3s, then go to medkit, finish
+      - 'go_to_door'           : walk to center spot in front of both buttons
+      - 'press_red_wait'       : walk to red, press, wait 1s, finish
+      - 'press_green_open'     : walk to green, press, open door, finish
+      - 'go_near_medkit_pause' : walk toward medkit but stop well before it, finish
     """
     def __init__(self, win_w: int, win_h: int, bank_asset_dir: Path, hud_font_path: Optional[Path], game_vars):
         self.win_w = win_w
@@ -181,12 +188,6 @@ class VaultRoomScene:
         # Wait state (e.g., after red press)
         self._wait_timer_ms: int = 0
 
-        # HUD font
-        if hud_font_path and Path(hud_font_path).exists():
-            self.hud_font = pygame.font.Font(str(hud_font_path), 22)
-        else:
-            self.hud_font = pygame.font.SysFont("monospace", 18)
-
         self._place_default_layout()
 
     # ---------- Layout ----------
@@ -212,6 +213,7 @@ class VaultRoomScene:
           - 'go_to_door'         : walk to center spot in front of both buttons
           - 'press_red_wait'     : walk to red, press, wait 1s, finish
           - 'press_green_open'   : walk to green, press, open door, finish
+          - 'go_near_medkit_pause' : walk toward medkit but stop well before it, finish
         """
         self._event_name = event_name
         self._on_event_done = on_done
@@ -242,6 +244,18 @@ class VaultRoomScene:
         elif event_name == "press_green_open":
             self._event_phase = "move"
             self._event_target = pygame.Vector2(self.green_btn_rect.centerx, self.green_btn_rect.centery)
+
+        elif event_name == "go_near_medkit_pause":
+            # Walk toward the medkit but stop WAY before reaching it.
+            self._event_phase = "move"
+            offset = 180  # stop this many pixels BEFORE the medkit (tweak to taste)
+            target_x = self.medkit_rect.centerx - offset
+            target_y = min(self.medkit_rect.centery, self.safe_bottom - self.player.height // 2)
+            # keep within safe bounds
+            left_bound  = 12 + self.player.width // 2
+            right_bound = self.win_w - 12 - self.player.width // 2
+            target_x = max(left_bound, min(right_bound, target_x))
+            self._event_target = pygame.Vector2(target_x, target_y)
 
         else:
             self._finish_event_immediately()
@@ -317,6 +331,12 @@ class VaultRoomScene:
                     self.green_btn_img = self.green_btn_down
                     self.door_open = True
                     self._set_facing("up")
+                    self._finish_event_immediately()
+
+            elif self._event_name == "go_near_medkit_pause":
+                if self._distance_to(self._event_target) < 2.0:
+                    self._set_facing("up")
+                    # Do NOT pick up the medkit; just stop and let dialogue play
                     self._finish_event_immediately()
 
         self.walker.update(self._facing_dir, self._moving, dt_ms)
@@ -418,13 +438,6 @@ class VaultRoomScene:
         frame = self.walker.current_frame()
         img_rect = frame.get_rect(midbottom=self.player.midbottom)
         screen.blit(frame, img_rect.topleft)
-
-        # HUD
-        hud = self.hud_font.render(
-            f"Trust: {self.gvars.trust}   PoliceGap: {self.gvars.police_gap}",
-            True, (230, 230, 230)
-        )
-        screen.blit(hud, (12, 8))
 
         # Separator
         pygame.draw.line(screen, (0, 0, 0), (0, WALL_H), (self.win_w, WALL_H), 2)

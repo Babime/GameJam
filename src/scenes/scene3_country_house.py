@@ -1,3 +1,5 @@
+# src/scenes/scene3_country_house.py
+
 SCENE3_MARTHA = {
     "id": "martha_scene",
     "start": "intro_1",
@@ -22,8 +24,22 @@ SCENE3_MARTHA = {
         "house_arrival": {
             "type": "line",
             "speaker": "Narrateur",
-            "text": ("Tony s’arrête devant une maison isolée. "
-                     "Moteur coupé. Des bruits de pas précipités résonnent à l’intérieur."),
+            "text": "Tony s’arrête devant une maison isolée. Moteur coupé...",
+            "next": "cinematic_arrival_top"
+        },
+        "cinematic_arrival_top": {
+            "type": "wait_scene",
+            "event": "arrival_from_top",
+            "next": "tony_gets_out"
+        },
+        "tony_gets_out": {
+            "type": "wait_scene",
+            "event": "tony_exit_car",
+            "next": "martha_comes_out"
+        },
+        "martha_comes_out": {
+            "type": "wait_scene",
+            "event": "martha_exit_house",
             "next": "martha_meets"
         },
         "martha_meets": {
@@ -50,14 +66,14 @@ SCENE3_MARTHA = {
             "type": "choice",
             "prompt": "Que proposez-vous à Tony ?",
             "options": [
-                { "id": "living_room", "label": "Entrez, reposez-vous dans le salon", "correct": False }, # considerating wrong
-                { "id": "cellar", "label": "Il y a une cabane plus loin, personne ne vous y trouvera", "correct": True }, # considerating correct
-                { "id": "leave", "label": "Désolée, vous ne pouvez pas rester ici", "correct": "neutral" } # considerating neutral
+                { "id": "living_room", "label": "Entrez, reposez-vous dans le salon", "correct": False },
+                { "id": "cellar",      "label": "Je n'ai qu'une cabane à proposer",    "correct": True  },
+                { "id": "leave",       "label": "Désolée, vous ne pouvez pas rester ici", "correct": "neutral" }
             ],
             "next": "branch_martha_lines"
         },
 
-        # Branch depending on choice
+        # Branch depending on choice (immediate lines)
         "branch_martha_lines": {
             "type": "branch_choice_3way",
             "if_correct": "martha_cellar_line",
@@ -81,49 +97,150 @@ SCENE3_MARTHA = {
             "type": "line",
             "speaker": "Martha",
             "text": "Désolée... vous ne pouvez pas rester ici.",
-            "next": "decide_sleep"
+            "next": "leave_tony_nowhere"
+        },
+        "leave_tony_nowhere": {
+            "type": "line",
+            "speaker": "Tony",
+            "text": "... Je comprends, mais je n'ai nulle part où aller ...",
+            "next": "ignore_effects_redirect"
         },
 
         # ---- Decision follow / ignore ----
+        # If Tony trusts you (trust >= threshold), he follows your suggestion.
+        # If he DOESN'T trust you (trust < threshold) and you suggested 1 or 2,
+        # he overrides with choice 3 and we play the "mistrust" cinematic.
         "decide_sleep": {
             "type": "decision_follow_3way",
             "if_follow_correct": "follow_cellar",
             "if_follow_wrong":   "follow_living",
             "if_follow_neutral": "follow_leave",
-            "if_ignore_correct": "ignore_cellar",
-            "if_ignore_wrong":   "ignore_living",
-            "if_ignore_neutral": "ignore_leave"
+            "if_ignore_correct": "ignore_start",   # NEW path
+            "if_ignore_wrong":   "ignore_start",   # NEW path
+            "if_ignore_neutral": "ignore_start"    # NEW path
         },
 
-        # ---- FOLLOW BRANCH ----
-        # Living room (wrong)
+        # ---- FOLLOW BRANCH (Living room) ----
         "follow_living": {
             "type": "effects",
-            "effects": {"trust": -12, "police_gap": -3},
-            "next": "cinematic_living_caught"
+            "effects": {"trust": -14, "police_gap": -3},
+            "next": "cin_martha_step_right"
         },
-        "cinematic_living_caught": {
+        "cin_martha_step_right": {
             "type": "wait_scene",
-            "event": "harold_arrives_chase",
-            "next": "exit_chase"
+            "event": "martha_step_right",
+            "next": "line_martha_invite"
+        },
+        "line_martha_invite": {
+            "type": "line",
+            "speaker": "Martha",
+            "text": "Entrez donc, j'ai des pansements pour vous",
+            "next": "line_tony_accept"
+        },
+        "line_tony_accept": {
+            "type": "line",
+            "speaker": "Tony",
+            "text": "... Si vous le dites",
+            "next": "cin_tony_enter_living"
+        },
+        "cin_tony_enter_living": {
+            "type": "wait_scene",
+            "event": "tony_enter_living",
+            "next": "line_martha_thinks"
+        },
+        "line_martha_thinks": {
+            "type": "line",
+            "speaker": "Martha",
+            "text": "Je me demande quand Arold rentre, il m'a dit qu'il était à la poursuite d'un voleur. Le monde dans lequel on vit. A mon époque ...",
+            "next": "cin_martha_back_home"
+        },
+        "cin_martha_back_home": {
+            "type": "wait_scene",
+            "event": "martha_back_home",
+            "next": "cin_dark_sirens"
+        },
+        "cin_dark_sirens": {
+            "type": "wait_scene",
+            "event": "night_cut_with_sirens",
+            "next": "line_narrator_wakeup"
+        },
+        "line_narrator_wakeup": {
+            "type": "line",
+            "speaker": "Narrateur",
+            "text": "Tony se réveilla quelqes heures plus tard en sursaut. Entendant le bruit des sirenes il se prevcipite a fuir la maison, remarquant en passant par le salon un détail, qu'il n'a pas remarqué hier à cause de la fatigue, un portrait d'un vieil homme en uniforme de police ... Arold",
+            "next": "line_tony_mistrust"
+        },
+        "line_tony_mistrust": {
+            "type": "line",
+            "speaker": "Tony",
+            "text": "Je le savais, je ne peux faire confiance qu'à moi même !",
+            "next": "end"
         },
 
-        # Cellar (correct)
+        # ---- FOLLOW BRANCH (Cellar) ----
         "follow_cellar": {
             "type": "effects",
             "effects": {"trust": +10, "police_gap": +2},
-            "next": "cinematic_safe_cellar"
+            "next": "line_tony_ok_cellar"
         },
-        "cinematic_safe_cellar": {
+        "line_tony_ok_cellar": {
+            "type": "line",
+            "speaker": "Tony",
+            "text": "(C'est l'endroit parfait pour se reposer et de semer les flics !). Merci infiniment",
+            "next": "cin_cellar_tony_leave"
+        },
+        "cin_cellar_tony_leave": {
             "type": "wait_scene",
-            "event": "hide_in_cellar_safe",
-            "next": "exit_safe"
+            "event": "cellar_tony_turn_disappear",
+            "next": "cin_cellar_car_start_drive"
+        },
+        "cin_cellar_car_start_drive": {
+            "type": "wait_scene",
+            "event": "cellar_start_bg_drive",
+            "next": "line_martha_thinks_cellar"
         },
 
-        # Leave (neutral)
+        # Duplicate of the “thinks” line so we can branch differently for cellar path
+        "line_martha_thinks_cellar": {
+            "type": "line",
+            "speaker": "Martha",
+            "text": "Je me demande quand Arold rentre, il m'a dit qu'il était à la poursuite d'un voleur. Le monde dans lequel on vit. A mon époque ...",
+            "next": "cin_martha_back_home_cellar"
+        },
+        "cin_martha_back_home_cellar": {
+            "type": "wait_scene",
+            "event": "martha_back_home",
+            "next": "cin_cellar_dark_sirens"
+        },
+
+        # Darken (while the car sequence can still be running), then sirens
+        "cin_cellar_dark_sirens": {
+            "type": "wait_scene",
+            "event": "night_cut_with_sirens",
+            "next": "line_cellar_narrator_wakeup"
+        },
+        "line_cellar_narrator_wakeup": {
+            "type": "line",
+            "speaker": "Narrateur",
+            "text": "Tony se réveilla quelques heures plus tard en sursaut. Entendant le bruit des sirènes, il se précipite et fuit en voiture.",
+            "next": "line_tony_cellar_sirens"
+        },
+        "line_tony_cellar_sirens": {
+            "type": "line",
+            "speaker": "Tony",
+            "text": "Le son venait du côté de la maison de la vieille... Heureusement que j'ai passé la nuit ici, au moins ils ne m'ont pas vu.",
+            "next": "cellar_bonus_effects"
+        },
+        "cellar_bonus_effects": {
+            "type": "effects",
+            "effects": {"trust": +3, "police_gap": +1},
+            "next": "end"
+        },
+
+        # ---- FOLLOW BRANCH (Leave) ----
         "follow_leave": {
             "type": "effects",
-            "effects": {"trust": +6, "police_gap": -1},
+            "effects": {"trust": +2, "police_gap": -1},
             "next": "cinematic_leave_car"
         },
         "cinematic_leave_car": {
@@ -132,44 +249,103 @@ SCENE3_MARTHA = {
             "next": "exit_car"
         },
 
-        # ---- IGNORE BRANCH ----
-        # Living room ignored (Tony avoids trap)
-        "ignore_living": {
+                "ignore_start": {
             "type": "effects",
-            "effects": {"trust": +2, "police_gap": +2},
-            "next": "cinematic_ignore_living"
+            "effects": {"trust": -6, "police_gap": 0},
+            "next": "ignore_tony_line"
         },
-        "cinematic_ignore_living": {
+        "ignore_tony_line": {
+            "type": "line",
+            "speaker": "Tony",
+            "text": "C’est gentil de votre part mais je ne veux pas vous déranger, je vais passer la nuit dans la voiture",
+            "next": "ignore_martha_line"
+        },
+        "ignore_martha_line": {
+            "type": "line",
+            "speaker": "Martha",
+            "text": "Dans ce cas, vous pouvez rester ici à côté de la maison. Si vous avez besoin de quoi que ce soit, n’hésitez pas à toquer à la porte.",
+            "next": "ignore_anim_martha_back"
+        },
+        "ignore_anim_martha_back": {
             "type": "wait_scene",
-            "event": "avoid_livingroom_sleep_car",
-            "next": "exit_car"
+            "event": "mistrust_martha_turn_back_disappear",
+            "next": "ignore_anim_tony_turn"
+        },
+        "ignore_anim_tony_turn": {
+            "type": "wait_scene",
+            "event": "mistrust_tony_turn_other_and_disappear",
+            "next": "ignore_dark"
+        },
+        "ignore_dark": {
+            "type": "wait_scene",
+            "event": "night_cut_with_sirens",
+            "next": "ignore_wakeup"
+        },
+        "ignore_wakeup": {
+            "type": "wait_scene",
+            "event": "wakeup_car_only",
+            "next": "ignore_tony_alarm"
+        },
+        "ignore_tony_alarm": {
+            "type": "line",
+            "speaker": "Tony",
+            "text": "Merde, ils m’ont déjà trouvé ? Est-ce que la vieille les a appelés ? Vaut mieux se barrer tout de suite.",
+            "next": "ignore_car_speed"
+        },
+        "ignore_car_speed": {
+            "type": "wait_scene",
+            "event": "car_speed_away_fast",
+            "next": "end"
         },
 
-        # Cellar ignored (Tony misses safe option)
-        "ignore_cellar": {
-            "type": "effects",
-            "effects": {"trust": -6, "police_gap": -2},
-            "next": "cinematic_ignore_cellar"
+        # ---- LOW-TRUST OVERRIDE (Player suggested 1 or 2; Tony picks 3) ----
+        "mistrust_override_start": {
+            "type": "line",
+            "speaker": "Tony",
+            "text": "C’est gentil de votre part mais je ne veux pas vous déranger, je vais passer la nuit dans la voiture",
+            "next": "ignore_effects_redirect"
         },
-        "cinematic_ignore_cellar": {
-            "type": "wait_scene",
-            "event": "reject_cellar_sleep_car",
-            "next": "exit_car"
-        },
-
-        # Leave ignored (Tony insists to stay anyway in the cellar)
-        "ignore_leave": {
+        "ignore_effects_redirect": {
             "type": "effects",
             "effects": {"trust": -8, "police_gap": 0},
-            "next": "cinematic_force_cellar"
+            "next": "ignore_martha_line"
         },
-        "cinematic_force_cellar": {
+        "mistrust_martha_reply": {
+            "type": "line",
+            "speaker": "Martha",
+            "text": "Dans ce cas, vous pouvez restez ici à côté de la maison, si vous avez besoin de quoique ce soit, n’hésitez pas à toquer à la porte",
+            "next": "mistrust_cin_martha_turn"
+        },
+        "mistrust_cin_martha_turn": {
             "type": "wait_scene",
-            "event": "force_cellar_stay",
-            "next": "exit_safe"
+            "event": "mistrust_martha_turn_back_disappear",
+            "next": "mistrust_cin_tony_wait_disappear"
+        },
+        "mistrust_cin_tony_wait_disappear": {
+            "type": "wait_scene",
+            "event": "mistrust_tony_turn_other_and_disappear",
+            "next": "cin_dark_sirens"
         },
 
-        # ---- Exit ----
+        # After sirens, show only the car, no Tony nor Martha
+        "mistrust_wakeup_car_only": {
+            "type": "wait_scene",
+            "event": "wakeup_car_only",
+            "next": "mistrust_tony_thinks"
+        },
+        "mistrust_tony_thinks": {
+            "type": "line",
+            "speaker": "Tony",
+            "text": "Merde, ils m’ont déjà trouvé ? Est ce que la vieille les as appelé ? Vaudrait mieux se barrer tout de suite",
+            "next": "mistrust_car_speed_off"
+        },
+        "mistrust_car_speed_off": {
+            "type": "wait_scene",
+            "event": "car_speed_away_fast",
+            "next": "end"
+        },
+
+        # ---- Exit texts (still available for other branches) ----
         "exit_chase": {
             "type": "line",
             "speaker": "Narrateur",
