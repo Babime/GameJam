@@ -227,9 +227,9 @@ def make_room_airport(win_w, win_h, gvars):
     )
 
 CAMPAIGN = [
-    #{"id": "scene1_vault", "scene": SCENE1_VAULT, "room_factory": make_room_scene1},
-    #{"id": "scene2_street", "scene": SCENE2_STREET, "room_factory": make_room_scene2_street, "bgm": "scene2.mp3", "bgm_volume": 0.6},
-    #{"id": "martha_scene",  "scene": SCENE3_MARTHA, "room_factory": make_room_scene2, "bgm": "scene3.mp3", "bgm_volume": 0.6},
+    {"id": "scene1_vault", "scene": SCENE1_VAULT, "room_factory": make_room_scene1},
+    {"id": "scene2_street", "scene": SCENE2_STREET, "room_factory": make_room_scene2_street, "bgm": "scene2.mp3", "bgm_volume": 0.6},
+    {"id": "martha_scene",  "scene": SCENE3_MARTHA, "room_factory": make_room_scene2, "bgm": "scene3.mp3", "bgm_volume": 0.6},
     {"id": "scene4_airport","scene": select_airport_scene, "room_factory": make_room_airport, "bgm": "scene4.mp3", "bgm_volume": 0.5},
 ]
 
