@@ -84,8 +84,31 @@ def _get_hud_font() -> pygame.font.Font:
 
 def draw_hud_overlay(screen: pygame.Surface, gvars: GameVars):
     font = _get_hud_font()
-    hud = font.render(f"Trust: {gvars.trust}   PoliceGap: {gvars.police_gap}", True, (230, 230, 230))
-    screen.blit(hud, (12, 8))
+
+    def color_trust(v):
+        # Trust : <=40 rouge ; 40<=v<50 orange ; >=50 vert
+        if v <= 40:
+            return (200, 0, 0)      # rouge
+        elif v <= 50:
+            return (230, 160, 0)    # orange
+        else:
+            return (0, 200, 0)      # vert
+
+    def color_police_gap(v):
+        # PoliceGap : <=3 rouge ; 3<v<5 orange ; >5 vert
+        if v <= 3:
+            return (200, 0, 0)      # rouge
+        elif v <= 5:
+            return (230, 160, 0)    # orange
+        else:
+            return (0, 200, 0)      # vert
+
+    trust_text  = font.render(f"Trust: {gvars.trust}", True, color_trust(gvars.trust))
+    police_text = font.render(f"PoliceGap: {gvars.police_gap}", True, color_police_gap(gvars.police_gap))
+
+    screen.blit(trust_text, (12, 8))
+    screen.blit(police_text, (300, 8))  # position demandée
+
 
 # ---------- Scene runner ----------
 def run_scene(

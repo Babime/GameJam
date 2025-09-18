@@ -193,7 +193,7 @@ def make_room_scene2_street(win_w, win_h, gvars):
 # Only run Scene 2 (street). Other scenes are left commented out.
 CAMPAIGN = [
     {"id": "scene1_vault", "scene": SCENE1_VAULT, "room_factory": make_room_scene1},
-    {"id": "scene2_street", "scene": SCENE2_STREET, "room_factory": make_room_scene2_street, "bgm": "scene2bis.mp3", "bgm_volume": 0.4},
+    {"id": "scene2_street", "scene": SCENE2_STREET, "room_factory": make_room_scene2_street, "bgm": "scene2.mp3", "bgm_volume": 0.4},
     {"id": "martha_scene", "scene": SCENE3_MARTHA, "room_factory": make_room_scene2, "bgm": "scene3.mp3", "bgm_volume": 0.65},
 ]
 

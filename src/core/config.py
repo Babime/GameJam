@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 # --- Gameplay defaults ---
-INITIAL_TRUST        = 55   # was 0 — start skeptical but not hostile
+INITIAL_TRUST        = 50   # was 0 — start skeptical but not hostile
 INITIAL_POLICE_GAP   = 0
 FOLLOW_THRESHOLD     = 55   # crossover point stays the same
 
@@ -42,7 +42,7 @@ BOX_FILL_COLOR     = (34, 34, 34)
 
 # --- Gameplay defaults ---
 
-INITIAL_POLICE_GAP  = 0
+INITIAL_POLICE_GAP  = 5
 FOLLOW_THRESHOLD    = 60  # follow when trust >= 60
 
 # --- Misc ---
