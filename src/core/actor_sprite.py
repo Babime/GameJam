@@ -1,4 +1,3 @@
-# src/core/actor_sprite.py
 from __future__ import annotations
 from pathlib import Path
 import pygame
@@ -85,12 +84,11 @@ def create_tony_animator(general_asset_dir: Path, target_height: int = 56) -> Fo
 def create_grandma_animator(general_asset_dir: Path, target_height: int = 54) -> FourDirWalker:
     """
     Grand-mère 4 directions, 2 frames/direction.
-    Noms fournis :
+    Fichiers:
       - up    : granny_walk_facing_back_1.png,  granny_walk_facing_back_2.png
       - down  : granny_walk_upfront_1.png,      granny_walk_upfront_2.png
       - right : granny_walk_to_his_right_1.png, granny_walk_to_his_right_2.png
       - left  : flip horizontal des frames right (comme Tony)
-    target_height ~ autour de Tony (SPRITE_DRAW_H=56), ici 54 par défaut.
     """
     up1    = _scale_to_height(_load(general_asset_dir / "granny_walk_facing_back_1.png"), target_height)
     up2    = _scale_to_height(_load(general_asset_dir / "granny_walk_facing_back_2.png"), target_height)
@@ -101,40 +99,56 @@ def create_grandma_animator(general_asset_dir: Path, target_height: int = 54) ->
     left1  = pygame.transform.flip(right1, True, False)
     left2  = pygame.transform.flip(right2, True, False)
 
-    frames = {
-        "up":    [up1, up2],
-        "down":  [down1, down2],
-        "right": [right1, right2],
-        "left":  [left1, left2],
-    }
-    # même cadence que Tony
-    return FourDirWalker(frames, frame_ms=140)
+    frames = {"up":[up1,up2], "down":[down1,down2], "right":[right1,right2], "left":[left1,left2]}
+    return FourDirWalker(frames, frame_ms=140)  # cadence identique à Tony
 
 
 def create_police_animator(general_asset_dir: Path, target_height: int = 56) -> FourDirWalker:
     """
-    Voiture de police : déplacement gauche/droite uniquement pour l’instant.
-    On utilise un seul sprite latéral : police_side.png
-      - right : police_side.png (dupliqué pour 2 frames)
-      - left  : flip horizontal des frames right
-      - up/down : placeholders = mêmes frames que right (jamais utilisées si tu ne commandes que L/R)
-    target_height aligné sur Tony (56 par défaut).
+    Voiture de police (gauche/droite pour l’instant).
+    - right : police_side.png (dupliquée pour 2 frames)
+    - left  : flip de right
+    - up/down : placeholders = right (jamais utilisés si L/R seulement)
     """
     side = _scale_to_height(_load(general_asset_dir / "police_side.png"), target_height)
-
     right1 = side
-    right2 = side  # on duplique pour garder la même API (2 frames)
+    right2 = side
     left1  = pygame.transform.flip(right1, True, False)
     left2  = pygame.transform.flip(right2, True, False)
+    frames = {
+        "up":[right1,right2], "down":[right1,right2],
+        "right":[right1,right2], "left":[left1,left2]
+    }
+    return FourDirWalker(frames, frame_ms=140)
 
-    # placeholders pour up/down (pour satisfaire FourDirWalker sans changer l’archi de Tony)
-    up1 = up2 = right1
-    down1 = down2 = right1
+def create_car_animator(general_asset_dir: Path, target_height: int = 56) -> FourDirWalker:
+    """
+    Car (proper orientation):
+      - down : car_front.png     (car coming toward screen/bottom)
+      - up   : car_back.png      (car going upward/away)
+      - left : car_side.png      (asset faces left)
+      - right: flipped(car_side) (so it faces right)
+    """
+    # Down uses FRONT
+    down1 = _scale_to_height(_load(general_asset_dir / "car_front.png"), target_height)
+    down2 = down1  # duplicate for simple 2-frame loop
+
+    # Up uses BACK
+    up1 = _scale_to_height(_load(general_asset_dir / "car_back.png"), target_height)
+    up2 = up1
+
+    # Side asset faces LEFT by default
+    left1 = _scale_to_height(_load(general_asset_dir / "car_side.png"), target_height)
+    left2 = left1
+
+    # RIGHT is a flipped LEFT
+    right1 = pygame.transform.flip(left1, True, False)
+    right2 = pygame.transform.flip(left2, True, False)
 
     frames = {
         "up":    [up1, up2],
         "down":  [down1, down2],
-        "right": [right1, right2],
         "left":  [left1, left2],
+        "right": [right1, right2],
     }
     return FourDirWalker(frames, frame_ms=140)

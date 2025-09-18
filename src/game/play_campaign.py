@@ -1,4 +1,4 @@
-# src/game/play_campaign.py
+
 from __future__ import annotations
 from pathlib import Path
 import sys
@@ -10,7 +10,7 @@ from core.config import (
     ASSETS_DIR, WIDTH, HEIGHT, FPS, TILE,
     FONT_PATH, CORNER_IMG_PATH, EDGE_IMG_PATH,
     FONT_SIZE, LINE_HEIGHT_FACTOR, PADDING_LEFT, PADDING_RIGHT, PADDING_TOP, PADDING_BOTTOM,
-    BOX_FILL_COLOR, BANK_ASSET_DIR, INITIAL_TRUST, INITIAL_POLICE_GAP, RNG_SEED
+    BOX_FILL_COLOR, BANK_ASSET_DIR, INITIAL_TRUST, INITIAL_POLICE_GAP, RNG_SEED, SCENE_INTRO_BLACK_MS
 )
 
 from dialog_ui import DialogueBox
@@ -20,30 +20,29 @@ from core.scene_runner import run_scene
 # --- import your scene content & room(s) ---
 from scenes.scene1_vault import SCENE1_VAULT
 from scenes.vault_room import VaultRoomScene
+from scenes.scene3_country_house import SCENE3_MARTHA
 from scenes.country_house_scene import CountryHouseScene
+
+# NEW: Scene 2 (street) dialogue + minimal static room
+from scenes.scene2_street import SCENE2_STREET
+from scenes.street_scene2_static import StreetScene2Static
+
 
 def _run_country_house_debug(screen, gvars):
     import pygame
-    from pathlib import Path
     from scenes.country_house_scene import CountryHouseScene
-    from core.config import ASSETS_DIR, FONT_PATH, FPS, WIDTH, HEIGHT
+    from core.config import FPS
 
-    # .tmx déjà cohérent avec make_room_scene2
-    MAP_PATH = ASSETS_DIR / "village" / "Village.tmx"
+    scene = CountryHouseScene(win_w=screen.get_width(), win_h=screen.get_height(), gvars=gvars)
 
-    scene = CountryHouseScene(
-        win_w=WIDTH,
-        win_h=HEIGHT,
-        map_path_or_dir=MAP_PATH,
-        hud_font_path=FONT_PATH,
-        game_vars=gvars
-    )
+    def _after_arrival(_):
+        scene.start_event("tony_exit_car", on_done=lambda __:
+            scene.start_event("martha_exit_house", on_done=lambda ___:
+                scene.start_event("martha_greets", on_done=lambda ____: None)
+            )
+        )
 
-    # petite chaîne d’événements pour voir l’anim
-    def _chain(_):
-        scene.start_event("martha_greets", on_done=lambda __: None)
-
-    scene.start_event("arrive_house", on_done=_chain)
+    scene.start_event("arrival_from_top", on_done=_after_arrival)
 
     clock = pygame.time.Clock()
     running = True
@@ -52,15 +51,17 @@ def _run_country_house_debug(screen, gvars):
             if ev.type == pygame.QUIT:
                 running = False
             elif ev.type == pygame.KEYDOWN:
-                # raccourcis debug utiles
                 if ev.key == pygame.K_a:
-                    scene.start_event("arrive_house", on_done=_chain)
+                    scene.start_event("arrival_from_top", on_done=_after_arrival)
                 elif ev.key == pygame.K_m:
-                    scene.start_event("martha_greets", on_done=lambda __: None)
+                    # If you want to just pop her out correctly:
+                    scene.start_event("martha_exit_house", on_done=lambda __:
+                        scene.start_event("martha_greets", on_done=lambda ___: None)
+                    )
                 elif ev.key == pygame.K_r:
                     scene.start_event("rest_living_room", on_done=lambda __: None)
                 elif ev.key == pygame.K_d:
-                    scene.start_event("depart", on_done=lambda __: None)
+                    scene.start_event("harold_arrives_chase", on_done=lambda __: None)
 
         dt = clock.tick(FPS)
         scene.update(dt)
@@ -76,23 +77,36 @@ def make_room_scene1(win_w, win_h, gvars):
         game_vars=gvars
     )
 
-
+# Kept as-is for the country house (Martha) scene
 def make_room_scene2(win_w, win_h, gvars):
-    # ton fichier .tmx est rangé dans assets/general/village/Village.tmx
-    MAP_PATH = ASSETS_DIR / "village" / "Village.tmx"
-    return CountryHouseScene(
-        win_w=win_w,
-        win_h=win_h,
-        map_path_or_dir=MAP_PATH,   # accepte aussi un dossier contenant un .tmx
-        hud_font_path=FONT_PATH,
-        game_vars=gvars
-    )
+    return CountryHouseScene(win_w, win_h, gvars)
 
+# NEW: minimal static room factory for Scene 2 (street)
+def make_room_scene2_street(win_w, win_h, gvars):
+    return StreetScene2Static(win_w, win_h, gvars)
+
+
+# Only run Scene 2 (street). Other scenes are left commented out.
 CAMPAIGN = [
     {"id": "scene1_vault", "scene": SCENE1_VAULT, "room_factory": make_room_scene1},
-    # {"id": "scene2_xyz", "scene": SCENE2, "room_factory": make_room_scene2},
-    # {"id": "scene3_abc", "scene": SCENE3, "room_factory": make_room_scene3},
+    {"id": "scene2_street", "scene": SCENE2_STREET, "room_factory": make_room_scene2_street},
+    {"id": "martha_scene", "scene": SCENE3_MARTHA, "room_factory": make_room_scene2},
 ]
+
+
+
+def _black_pause(screen: pygame.Surface, ms: int):
+    clock = pygame.time.Clock()
+    elapsed = 0
+    while elapsed < ms:
+        for ev in pygame.event.get():
+            if ev.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit(0)
+        screen.fill((0, 0, 0))
+        pygame.display.flip()
+        elapsed += clock.tick(FPS)
+
 
 def main():
     pygame.init()
@@ -115,17 +129,19 @@ def main():
         _run_country_house_debug(screen, gvars)
         pygame.quit()
         return
-    
+
     for entry in CAMPAIGN:
+        _black_pause(screen, SCENE_INTRO_BLACK_MS)
         scene_def = entry["scene"]
         factory   = entry["room_factory"]
-        run_scene(screen, dialog, scene_def, factory, gvars, fps=FPS, rng_seed=RNG_SEED)
+        run_scene(screen, dialog, scene_def, factory, gvars, fps=FPS, rng_seed=None)
         # Allow early quit
         for ev in pygame.event.get(pygame.QUIT):
             pygame.quit()
             return
 
     pygame.quit()
+
 
 if __name__ == "__main__":
     main()
