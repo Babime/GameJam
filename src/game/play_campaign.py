@@ -227,10 +227,10 @@ def make_room_airport(win_w, win_h, gvars):
     )
 
 CAMPAIGN = [
-    {"id": "scene1_vault", "scene": SCENE1_VAULT, "room_factory": make_room_scene1},
-    {"id": "scene2_street", "scene": SCENE2_STREET, "room_factory": make_room_scene2_street},
-    {"id": "martha_scene",  "scene": SCENE3_MARTHA, "room_factory": make_room_scene2},
-    {"id": "scene4_airport","scene": select_airport_scene, "room_factory": make_room_airport},
+    #{"id": "scene1_vault", "scene": SCENE1_VAULT, "room_factory": make_room_scene1},
+    #{"id": "scene2_street", "scene": SCENE2_STREET, "room_factory": make_room_scene2_street, "bgm": "scene2.mp3", "bgm_volume": 0.6},
+    #{"id": "martha_scene",  "scene": SCENE3_MARTHA, "room_factory": make_room_scene2, "bgm": "scene3.mp3", "bgm_volume": 0.6},
+    {"id": "scene4_airport","scene": select_airport_scene, "room_factory": make_room_airport, "bgm": "scene4.mp3", "bgm_volume": 0.5},
 ]
 
 
@@ -248,8 +248,7 @@ def _black_pause(screen: pygame.Surface, ms: int):
         elapsed += clock.tick(FPS)
 
 
-def run_end_sequence(screen: pygame.Surface, dialog: DialogueBox, outcome: str,
-                     menu_bgm: str = "scene1.mp3"):
+def run_end_sequence(screen: pygame.Surface, dialog: DialogueBox, outcome: str):
     """End screen with 3 messages; advance on SPACE like normal dialogue.
     On the last SPACE, fade to the start screen and wait for a new Start."""
     # Cut current music fast
@@ -304,7 +303,6 @@ def run_end_sequence(screen: pygame.Surface, dialog: DialogueBox, outcome: str,
         pygame.display.flip()
 
     # Restart menu music and fade into start screen; return when the player presses Start
-    play_bgm(menu_bgm, volume=0.5)
     show_start_screen(screen, WIDTH, HEIGHT, fade_in_ms=1200)
 
 def main():
@@ -356,7 +354,7 @@ def main():
 
         # --- When the campaign ends, play the end sequence, then loop to replay ---
         outcome = gvars.flags.get("ending", "caught")  # default if not set
-        run_end_sequence(screen, dialog, outcome, menu_bgm="scene1.mp3")
+        run_end_sequence(screen, dialog, outcome)
         first_cycle = False
 
 
